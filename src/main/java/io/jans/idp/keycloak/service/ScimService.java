@@ -12,6 +12,7 @@ import io.jans.as.common.util.AttributeConstants;
 import io.jans.scim.model.scim2.SearchRequest;
 import io.jans.scim.model.scim2.user.UserResource;
 import io.jans.scim2.client.rest.ClientSideService;
+import io.jans.scim.model.scim2.ListResponse;
 import io.jans.orm.model.PagedResult;
 
 import io.jans.idp.keycloak.util.Constants;
@@ -131,7 +132,13 @@ public class ScimService {
         LOG.info(" postData() - client:{}, searchRequest:{}", client, searchRequest);
         System.out.println("postData() - client = "+client+", searchRequest = "+searchRequest+" \n\n");
         
-        user = SimpleHttp.doPost(uri, client).auth(accessToken).json(searchRequest).asJson(UserResource.class);
+        //user = SimpleHttp.doPost(uri, client).auth(accessToken).json(searchRequest).asJson(UserResource.class);
+        ListResponse listResponse = SimpleHttp.doPost(uri, client).auth(accessToken).json(searchRequest).asJson(ListResponse.class);
+                LOG.info(" postData() - listResponse:{}", listResponse);
+        System.out.println("postData() - listResponse = "+listResponse+"\n\n");    
+        if(listResponse!=null && listResponse.getResources()!=null && listResponse.getResources().size()>0) {
+        user=listResponse.getResources().stream().map(UserResource.class::cast).findFirst().get();
+        }
         LOG.info(" postData() - user:{}", user);
         System.out.println("postData() - user = "+user+"\n\n");
         }catch(Exception ex){
