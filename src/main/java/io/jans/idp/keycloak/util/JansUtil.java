@@ -72,6 +72,7 @@ public class JansUtil {
 
         // Get clientSecret
         String clientSecret = this.getClientDecryptPassword();
+        LOG.info("Access Token Request - clientId:{}, clientSecret:{}", clientId, clientSecret);
 
         // distinct scopes
         Set<String> scopesSet = new HashSet<>(scopes);

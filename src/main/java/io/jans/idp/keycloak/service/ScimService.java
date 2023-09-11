@@ -14,6 +14,7 @@ import io.jans.scim.model.scim2.user.UserResource;
 import io.jans.scim2.client.rest.ClientSideService;
 import io.jans.orm.model.PagedResult;
 
+import io.jans.idp.keycloak.util.Constants;
 import io.jans.idp.keycloak.util.JansUtil;
 
 import java.io.IOException;
@@ -41,7 +42,8 @@ public class ScimService {
     }
     
     private String requestAccessToken() {
-        String token = jansUtil.requestScimAccessToken();
+        //String token = jansUtil.requestScimAccessToken();
+        String token = Constants.AUTH_TOKEN;
         LOG.info(" token:{}", token);
         return token;
     }
@@ -66,7 +68,7 @@ public class ScimService {
         try {
             System.out.println("ScimService()::getUserByName() - username = "+username);
             String filter = "userName eq \""+username+"\"";
-            return makePostRequest(this.getScimUserSearchEndpoint() ,this.requestAccessToken(),filter);
+            return postData(this.getScimUserSearchEndpoint() ,this.requestAccessToken(),filter);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on username:{} from external service is:{} - {} ", username, ex.getMessage(), ex);

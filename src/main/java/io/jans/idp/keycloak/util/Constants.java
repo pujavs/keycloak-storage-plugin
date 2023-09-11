@@ -18,7 +18,7 @@ public class Constants {
     public static final String TOKEN_ENDPOINT = "https://pujavs-settling-giraffe.gluu.info/jans-auth/restv1/token";
     public static final String SCIM_USER_ENDPOINT = "https://pujavs-settling-giraffe.gluu.info/jans-scim/restv1/v2/Users";
     public static final String SCIM_USER_SEARCH_ENDPOINT = "https://pujavs-settling-giraffe.gluu.info/jans-scim/restv1/v2/Users/.search";
-    public static final String  AUTH_TOKEN = "0aaa783f-c357-4d51-9e4f-93df99b561db";
+    public static final String  AUTH_TOKEN = "6a26e651-eda2-4108-a1d0-d2585551a943";
     public static final String SCIM_OAUTH = "https://jans.io/scim/users.read";
     
 }
