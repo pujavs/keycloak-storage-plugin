@@ -19,9 +19,9 @@ import io.jans.idp.keycloak.util.JansUtil;
 import java.io.IOException;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
@@ -31,14 +31,13 @@ import org.slf4j.LoggerFactory;
 
 public class ScimService {
 
-    private static Logger LOG = LoggerFactory.getLogger(UsersApiLegacyService.class);
-    private static ClientSideService scimClient = null;
+    private static Logger LOG = LoggerFactory.getLogger(ScimService.class);
     private static JansUtil jansUtil = new JansUtil();
     
-    private String getScimUserEndpoint() {
-        String scimUserEndpoint = jansUtil.requestScimAccessToken();
-        LOG.info(" scimUserEndpoint:{}", scimUserEndpoint);
-        return scimUserEndpoint;
+    private String getScimUserSearchEndpoint() {
+        String scimUserSearchEndpoint = jansUtil.getScimUserSearchEndpoint();
+        LOG.info(" scimUserSearchEndpoint:{}", scimUserSearchEndpoint);
+        return scimUserSearchEndpoint;
     }
     
     private String requestAccessToken() {
@@ -51,8 +50,9 @@ public class ScimService {
         LOG.info(" inum:{}", inum);
         System.out.println("inum = "+inum);
         try {
-            System.out.println("UsersApiLegacyService()::getUserById() - inum = "+inum);
-            return makeGetRequest(getScimUserEndpoint() +"/"+ inum,this.requestAccessToken());
+            System.out.println("ScimService()::getUserById() - inum = "+inum);
+            String filter = "id eq \""+inum+"\"";
+            return makePostRequest(getScimUserSearchEndpoint() +"/"+ inum,this.requestAccessToken(),filter);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on inum:{} from external service is:{} - {} ", inum, ex.getMessage(), ex);
@@ -64,9 +64,9 @@ public class ScimService {
     public UserResource getUserByName(String username) {
         LOG.info(" username:{}", username);
         try {
-            System.out.println("UsersApiLegacyService()::getUserByName() - username = "+username);
-            //return SimpleHttp.doGet(AUTH_USER_ENDPOINT + username, this.session).asJson(User.class);
-            return makeGetRequest(this.getScimUserEndpoint() +"?pattern="+username ,this.requestAccessToken());
+            System.out.println("ScimService()::getUserByName() - username = "+username);
+            String filter = "userName eq \""+username+"\"";
+            return makePostRequest(this.getScimUserSearchEndpoint() ,this.requestAccessToken(),filter);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on username:{} from external service is:{} - {} ", username, ex.getMessage(), ex);
@@ -78,8 +78,9 @@ public class ScimService {
     public UserResource getUserByEmail(String email) {
         LOG.info(" email:{}", email);
         try {
-            System.out.println("UsersApiLegacyService()::getUserById() - email = "+email);
-            return makeGetRequest(this.getScimUserEndpoint() +"?pattern="+email ,this.requestAccessToken());
+            System.out.println("ScimService()::getUserById() - email = "+email);
+            String filter = "emails[value eq \"" + email + "\"]";
+            return makePostRequest(this.getScimUserSearchEndpoint(),this.requestAccessToken(),filter);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on email:{} from external service is:{} - {} ", email, ex.getMessage(), ex);
@@ -88,45 +89,64 @@ public class ScimService {
         return null;
     }
     
-    private UserResource makeGetRequestNew(String uri, String accessToken) throws IOException {
-        LOG.info(" makeGetRequest() - uri:{}, accessToken:{}", uri, accessToken);
-        System.out.println("UsersApiLegacyService()::makeGetRequest() - uri = "+uri+" , accessToken ="+accessToken);
-       
+    private UserResource makePostRequest(String uri, String accessToken, String filter) throws IOException {
+        LOG.info(" makePostRequest() - uri:{}, accessToken:{}", uri, accessToken);
+        System.out.println("makePostRequest() - uri = "+uri+" , accessToken ="+accessToken);
+        SearchRequest searchRequest = createSearchRequest(filter);
+        
         Builder clientRequest = jansUtil.getClientBuilder(uri);    
         clientRequest.header("Authorization", "Bearer " + accessToken);
-        LOG.info(" makeGetRequest() - clientRequest:{}", clientRequest);
-        System.out.println("UsersApiLegacyService()::makeGetRequest() - clientRequest = "+clientRequest+" \n\n");
-
-        Response response = clientRequest.get();
-        LOG.info(" makeGetRequest() - response:{}", response);
-        System.out.println("UsersApiLegacyService()::makeGetRequest() - response = "+response+" \n\n");
+        LOG.info(" makePostRequest() - clientRequest:{}", clientRequest);
         
-       
-        return null;
-    }
-    
-    
-    private UserResource makeGetRequest(String uri, String accessToken) throws IOException {
-        LOG.info(" makeGetRequest() - uri:{}, accessToken:{}", uri, accessToken);
-        System.out.println("UsersApiLegacyService()::makeGetRequest() - uri = "+uri+" , accessToken ="+accessToken);
-       
-        HttpClient client = HttpClientBuilder.create().build();
-        HttpGet request = new HttpGet(uri);        
-        request.addHeader("Authorization", "Bearer " + accessToken);
-        request.setHeader("Authorization", "Bearer " + accessToken);
-        LOG.info(" makeGetRequest() - client:{}, request:{}, request.getAllHeaders():{}", client, request,request.getAllHeaders());
-        System.out.println("UsersApiLegacyService()::makeGetRequest() - client = "+client+" ,request = "+request+" \n\n");
-
-        HttpResponse response =  client.execute(request);
-        LOG.info(" makeGetRequest() - response:{}", response);
-        System.out.println("UsersApiLegacyService()::makeGetRequest() - response = "+response+" \n\n");
+        Invocation invocation = clientRequest.buildPost(Entity.entity(searchRequest, MediaType.APPLICATION_JSON));
         
-       
-        UserResource user = SimpleHttp.doGet(this.getScimUserEndpoint(), client).header("Authorization", "Bearer " + accessToken).asJson(UserResource.class);
-        LOG.info(" makeGetRequest() - user:{}", user);
-        System.out.println("UsersApiLegacyService()::makeGetRequest() - user = "+user+" \n\n");
+        System.out.println("makePostRequest() - invocation = "+invocation+" \n\n");
+
+        Response response = invocation.invoke();
+        LOG.info(" makePostRequest() - response:{}", response);
+        System.out.println("makePostRequest() - response = "+response+" \n\n");
+        
+        UserResource user = null;
+        if(response!=null) {
+            LOG.info(" makePostRequest() - response.getEntity():{}, response.getClass():{}", response.getEntity(),response.getClass());
+            System.out.println("makePostRequest() - response.getEntity() = "+response.getEntity()+", response.getClass() = "+response.getClass()+" \n\n");
+        }
+        
+        //TO-Test - start
+        postData(uri,accessToken,filter);
+      //TO-Test - end
         
         return user;
+    }
+    
+    public UserResource postData(String uri, String accessToken, String filter) {
+        UserResource user = null;
+        try{
+            HttpClient client = HttpClientBuilder.create().build();
+        
+        
+        SearchRequest searchRequest = createSearchRequest(filter);
+        LOG.info(" postData() - client:{}, searchRequest:{}", client, searchRequest);
+        System.out.println("postData() - client = "+client+", searchRequest = "+searchRequest+" \n\n");
+        
+        user = SimpleHttp.doPost(uri, client).auth(accessToken).json(searchRequest).asJson(UserResource.class);
+        LOG.info(" postData() - user:{}", user);
+        System.out.println("postData() - user = "+user+"\n\n");
+        }catch(Exception ex){
+            ex.printStackTrace();
+            LOG.error("\n\n Error while fetching data is ex:{}",ex);
+        }
+        return user;
+    } 
+    
+    private SearchRequest createSearchRequest(String filter) {
+        LOG.info(" createSearchRequest() - filter:{}", filter);
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.setFilter(filter);
+        
+        LOG.info(" createSearchRequest() - searchRequest:{}", searchRequest);
+        System.out.println("ScimService()::createSearchRequest() - searchRequest = "+searchRequest+" \n\n");
+        return searchRequest;
     }
         
 

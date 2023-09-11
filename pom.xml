@@ -66,6 +66,11 @@
 			<artifactId>jans-orm-core</artifactId>
 			<version>${jans.version}</version>
 		</dependency>
+				<dependency>
+			<groupId>io.jans</groupId>
+			<artifactId>jans-orm-annotation</artifactId>
+			<version>${jans.version}</version>
+		</dependency>
 		
 		<!-- scim --> 
 		<dependency>

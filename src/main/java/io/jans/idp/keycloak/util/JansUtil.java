@@ -25,11 +25,15 @@ public class JansUtil {
     private static Logger LOG = LoggerFactory.getLogger(JansUtil.class);
     
     public String getTokenEndpoint() {
-        return Constants.AUTH_TOKEN;
+        return Constants.TOKEN_ENDPOINT;
     }
     
     public String getScimUserEndpoint() {
         return Constants.SCIM_USER_ENDPOINT;
+    }
+    
+    public String getScimUserSearchEndpoint() {
+        return Constants.SCIM_USER_SEARCH_ENDPOINT;
     }
     
     public String getClientDecryptPassword() {
