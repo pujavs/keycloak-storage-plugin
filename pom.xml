@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>io.jans</groupId>
+	<artifactId>keycloak-storage-plugin</artifactId>
+	<packaging>jar</packaging>
+	<version>1.0.17-SNAPSHOT</version>
+	<name>keycloak-storage-plugin</name>
+
+	<properties>
+		<jans.version>${project.version}</jans.version>
+		<slf4j.version>1.7.36</slf4j.version>
+		<keycloak.version>21.1.1</keycloak.version>
+		<maven-compiler.release>11</maven-compiler.release>
+		<maven-compiler.version>3.10.1</maven-compiler.version>
+		<maven-deps-plugin.version>3.6.0</maven-deps-plugin.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+
+
+<!--	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.keycloak</groupId>
+				<artifactId>keycloak-spi-bom</artifactId>
+				<version>${keycloak.version}</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>-->
+
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/JanssenProject/jans</url>
+		</repository>
+	</distributionManagement>
+
+
+	<dependencies>
+		<!-- jans -->
+		<dependency>
+			<groupId>io.jans</groupId>
+			<artifactId>jans-auth-common</artifactId>
+			<version>${jans.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jans</groupId>
+			<artifactId>jans-auth-client</artifactId>
+			<version>${jans.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jans</groupId>
+			<artifactId>jans-auth-model</artifactId>
+			<version>${jans.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jans</groupId>
+			<artifactId>jans-orm-core</artifactId>
+			<version>${jans.version}</version>
+		</dependency>
+		
+		<!-- scim --> 
+		<dependency>
+			<groupId>io.jans</groupId>
+			<artifactId>jans-scim-client</artifactId>
+			<version>${jans.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jans</groupId>
+			<artifactId>jans-scim-model</artifactId>
+			<version>${jans.version}</version>
+		</dependency>
+		
+		<!-- jakarta -->
+		<dependency>
+			<groupId>jakarta.ws.rs</groupId>
+			<artifactId>jakarta.ws.rs-api</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+
+		<!-- keycloak -->
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-core</artifactId>
+			<version>${keycloak.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-server-spi</artifactId>
+			<version>${keycloak.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-model-legacy</artifactId>
+			<version>${keycloak.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>jans-keycloak-storage-api</finalName>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.xml</include>
+					<include>**/*.properties</include>
+					<include>**/*.json</include>
+					<include>META-INF/services/*.*</include>
+				</includes>
+			</resource>
+		</resources>
+
+
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>${maven-deps-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/deps</outputDirectory>
+							<includeScope>runtime</includeScope>
+							<excludeTransitive>false</excludeTransitive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler.version}</version>
+				<configuration>
+					<release>${maven-compiler.release}</release>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>libs/</classpathPrefix>
+
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
+			
+		</plugins>
+	</build>
+
+</project>
