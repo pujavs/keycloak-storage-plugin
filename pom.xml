@@ -15,26 +15,14 @@
 		<slf4j.version>1.7.36</slf4j.version>
 		<log4j.version>2.19.0</log4j.version>
 		<keycloak.version>21.1.1</keycloak.version>
+		<junit.jupiter.version>5.9.2</junit.jupiter.version>
+		<testcontainers.jupiter.version>1.19.0</testcontainers.jupiter.version>
 		
 		<maven-compiler.release>11</maven-compiler.release>
 		<maven-compiler.version>3.10.1</maven-compiler.version>
 		<maven-deps-plugin.version>3.6.0</maven-deps-plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-
-
-
-<!--	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.keycloak</groupId>
-				<artifactId>keycloak-spi-bom</artifactId>
-				<version>${keycloak.version}</version>
-				<scope>import</scope>
-				<type>pom</type>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>-->
 
 
 	<distributionManagement>
@@ -123,6 +111,31 @@
 			<version>${slf4j.version}</version>
 			<scope>compile</scope>
 		</dependency>
+		
+		
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${junit.jupiter.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-params</artifactId>
+			<version>${junit.jupiter.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+	        <version>${testcontainers.jupiter.version}</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>com.github.fge</groupId>
+			<artifactId>jackson-coreutils</artifactId>
+	        <version>1.8</version>
+		</dependency>
+		
 	</dependencies>
 
 	<build>

@@ -4,7 +4,7 @@
  * Copyright (c) 2020, Janssen Project
  */
 
-package io.jans.configapi;
+package io.jans.idp.keycloak;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Assertions;

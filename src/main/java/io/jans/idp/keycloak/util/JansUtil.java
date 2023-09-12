@@ -1,5 +1,8 @@
 package io.jans.idp.keycloak.util;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.keycloak.broker.provider.util.SimpleHttp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +12,7 @@ import io.jans.as.model.common.GrantType;
 import io.jans.as.model.common.ScopeType;
 import io.jans.as.model.uma.wrapper.Token;
 import io.jans.as.model.util.Util;
-
+import io.jans.scim.model.scim2.ListResponse;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation.Builder;
@@ -17,7 +20,10 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.Response;
 
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JacksonUtils;
+import java.io.IOException;
 import java.util.*;
 import java.util.Collections;
 
@@ -48,7 +54,7 @@ public class JansUtil {
         return ClientBuilder.newClient().target(url).request();
     }
     
-    public String requestScimAccessToken() {
+    public String requestScimAccessToken() throws IOException{
         List<String> scopes = new ArrayList<>();
         scopes.add(Constants.SCIM_OAUTH);
         String token = requestAccessToken(getClientId(), scopes);
@@ -56,7 +62,7 @@ public class JansUtil {
         return token;
     }
 
-    public String requestAccessToken(final String clientId, final List<String> scope) {
+    public String requestAccessToken(final String clientId, final List<String> scope) throws IOException{
         LOG.info("Request for AccessToken - clientId:{}, scope:{} ", clientId, scope);
         String tokenUrl = getTokenEndpoint();
         Token token = getAccessToken(tokenUrl, clientId, scope);
@@ -67,7 +73,7 @@ public class JansUtil {
         return null;
     }
     
-    private Token getAccessToken(final String tokenUrl, final String clientId, final List<String> scopes) {
+    private Token getAccessToken(final String tokenUrl, final String clientId, final List<String> scopes) throws IOException {
         LOG.info("Access Token Request - tokenUrl:{}, clientId:{}, scopes:{}", tokenUrl, clientId, scopes);
 
         // Get clientSecret
@@ -100,6 +106,47 @@ public class JansUtil {
     }
 
     private static TokenResponse requestAccessToken(final String tokenUrl, final String clientId,
+            final String clientSecret, final String scope) throws IOException{
+        LOG.debug("Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{} ", tokenUrl,
+                clientId, clientSecret, scope);
+        Response response = null;
+        try {
+            TokenRequest tokenRequest = new TokenRequest(GrantType.CLIENT_CREDENTIALS);
+            tokenRequest.setScope(scope);
+            tokenRequest.setAuthUsername(clientId);
+            tokenRequest.setAuthPassword(clientSecret);
+            /*
+             * Builder request = getClientBuilder(tokenUrl); request.header("Authorization",
+             * "Basic " + tokenRequest.getEncodedCredentials());
+             * request.header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED); final
+             * MultivaluedHashMap<String, String> multivaluedHashMap = new
+             * MultivaluedHashMap<>( tokenRequest.getParameters()); response =
+             * request.post(Entity.form(multivaluedHashMap));
+             */
+            
+            HttpClient client = HttpClientBuilder.create().build();
+            response = SimpleHttp.doPost(tokenUrl, client).authBasic(clientId,clientSecret).json(tokenRequest).asJson(Response.class);
+                  
+            
+          
+            LOG.trace("Response for Access Token -  response:{}", response);
+            if (response.getStatus() == 200) {
+                String entity = response.readEntity(String.class);
+                TokenResponse tokenResponse = new TokenResponse();
+                tokenResponse.setEntity(entity);
+                tokenResponse.injectDataFromJson(entity);
+                return tokenResponse;
+            }
+        } finally {
+
+            if (response != null) {
+                response.close();
+            }
+        }
+        return null;
+    }
+    
+    private static TokenResponse requestAccessTokenOld(final String tokenUrl, final String clientId,
             final String clientSecret, final String scope) {
         LOG.debug("Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{} ", tokenUrl,
                 clientId, clientSecret, scope);
