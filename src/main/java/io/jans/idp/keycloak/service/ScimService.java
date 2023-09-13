@@ -48,9 +48,16 @@ public class ScimService {
     }
 
     private String requestAccessToken() {
-        //String token = jansUtil.requestScimAccessToken();
-        String token = Constants.AUTH_TOKEN;
+        String token = null;
+  
+        try {
+        token = jansUtil.requestScimAccessToken();
+        //String token = Constants.AUTH_TOKEN;
         LOG.info(" token:{}", token);
+        }catch(Exception ex) {
+            LOG.error(" Error while generating access token for SCIM endpoint is:{}", ex);
+            throw new WebApplicationException("Error while generating access token for SCIM endpoint is = "+ex);
+        }
         return token;
     }
 
@@ -112,20 +119,6 @@ public class ScimService {
             LOG.info(" postData() - client:{}, searchRequest:{}", client, searchRequest);
             System.out.println("postData() - client = " + client + ", searchRequest = " + searchRequest + " \n\n");
 
-            // user = SimpleHttp.doPost(uri,
-            // client).auth(accessToken).json(searchRequest).asJson(UserResource.class);
-            /*
-             * ListResponse listResponse = SimpleHttp.doPost(uri,
-             * client).auth(accessToken).json(searchRequest).asJson(ListResponse.class);
-             * LOG.info(" postData() - listResponse:{}", listResponse);
-             * System.out.println("postData() - listResponse = "+listResponse+"\n\n");
-             * if(listResponse!=null && listResponse.getResources()!=null &&
-             * listResponse.getResources().size()>0) {
-             * user=listResponse.getResources().stream().map(UserResource.class::cast).
-             * findFirst().get(); }
-             */
-
-            // working
             JsonNode jsonNode = SimpleHttp.doPost(uri, client).auth(accessToken).json(searchRequest).asJson();
             LOG.info("\n\n new  postData() - jsonNode:{}", jsonNode);
             System.out.println("postData() - jsonNode = "+jsonNode+"\n\n");

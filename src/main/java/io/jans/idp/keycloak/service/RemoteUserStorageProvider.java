@@ -51,9 +51,10 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
         UserModel userModel = null;
         try {
             UserResource user = usersService.getUserById(id);
+            LOG.info("***** user fetched based on  id:{} is user:{}", id, user);
             if (user != null) {
                 userModel = createUserModel(paramRealmModel, user);
-                System.out.println("\n New userModel ="+userModel+"\n\n");
+                LOG.info("\n\n\n\n ***************** New userModel ="+userModel+"\n\n");
                 System.out.println(userModel.toString());
                 LOG.info("userModel:{}", userModel);
             }
@@ -98,10 +99,10 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
     }
 
     private UserModel createUserModel(RealmModel realm, UserResource user) {
-        LOG.info("createUserModel() - realm:{} , user:{}", realm, user);
+        LOG.info("\n\n\n createUserModel() - realm:{} , user:{}", realm, user+"\n\n\n");
         System.out.println("\n createUserModel()- with realm = "+realm+" ,user = "+user +"\n\n");
         UserModel userModel = new UserAdapter(session, realm, model, user);
-        LOG.info("createUserModel() - userModel:{}", userModel);
+        LOG.info("\n\n\n Final createUserModel() - userModel:{}", userModel);
         System.out.println("\n createUserModel()- with userModel = "+userModel +"\n\n");
         return userModel;
     }
