@@ -147,17 +147,28 @@ public class JansUtil {
 
            Map<String, String> parameters = new HashMap<>();
            parameters.put("grant_type", GrantType.CLIENT_CREDENTIALS.getValue());
-           parameters.put("username", clientId);
+           parameters.put("username", clientId+":"+clientSecret);
            parameters.put("password", clientSecret);
            parameters.put("scope", scope);
            parameters.put("client_id", clientId);
            parameters.put("client_secret", clientSecret);
+           parameters.put("authorization_method", AuthenticationMethod.CLIENT_SECRET_BASIC.name());
            
-            HttpClient client = HttpClientBuilder.create().build();
+            //HttpClient client = HttpClientBuilder.create().build();
            
-            LOG.info("\n\n\n\n @@@@@ Request for Access Token -  parameters:{} ", parameters);
-            JsonNode jsonNode = SimpleHttp.doGet(tokenUrl, client).authBasic(clientId, clientSecret).json(parameters).asJson();
-            LOG.info("Request for Access Token -  jsonNode:{} ", jsonNode);
+           HttpClient client = HttpClientBuilder.create().build();
+                LOG.info("\n\n\n\n @@@@@*** Request for Access Token for Post-  tokenUrl:{}, parameters:{} ", tokenUrl,parameters);
+            //JsonNode jsonNode = SimpleHttp.doGet(tokenUrl, client).authBasic(clientId, clientSecret).json(parameters).asJson();
+                try {
+            JsonNode jsonNode = SimpleHttp.doGet(tokenUrl, client).acceptJson().param("user", clientId+":"+clientSecret).json(parameters).asJson();
+            LOG.info("\n\n GET Request for Access Token -  jsonNode:{} ", jsonNode);
+                }catch(Exception ex) {
+                    LOG.error("\n\n GET Request for Access Token ex:{} ", ex);
+                }
+            
+                JsonNode jsonNode2 = SimpleHttp.doPost(tokenUrl, client).acceptJson().param("user", clientId+":"+clientSecret).json(parameters).asJson();
+            //JsonNode jsonNode = SimpleHttp.doGet(tokenUrl, client).json(parameters).asJson();
+            LOG.info("POST Request for Access Token -  jsonNode2:{} ", jsonNode2);
 
         } finally {
 
