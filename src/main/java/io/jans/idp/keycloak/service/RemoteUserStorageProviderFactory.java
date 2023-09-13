@@ -18,6 +18,10 @@ import org.keycloak.storage.UserStorageProvider;
 import org.keycloak.storage.adapter.AbstractUserAdapter;
 import org.keycloak.storage.UserStorageProviderFactory;
 
+import org.keycloak.events.EventListenerProvider;
+import org.keycloak.events.EventListenerProviderFactory;
+
+
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -49,6 +53,13 @@ public class RemoteUserStorageProviderFactory implements UserStorageProviderFact
     public void init(Config.Scope config) {
         LOG.info("\n\n\n RemoteUserStorageProviderFactory::init() - config:{}",config);
         System.out.println("\n\n\n ** RemoteUserStorageProvider::init()- config = "+config );
+        
+        String tokenUrl = config.get("jans-token-url");
+        String clientId = config.get("jans-client-id");
+        
+        LOG.info("\n\n\n ***** RemoteUserStorageProviderFactory::init() - Properties form Config.Scope - tokenUrl:{}, clientId:{}",tokenUrl, clientId);
+      
+        
     }
 
     @Override

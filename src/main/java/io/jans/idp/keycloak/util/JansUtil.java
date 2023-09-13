@@ -105,40 +105,7 @@ public class JansUtil {
         return null;
     }
     
-    private static TokenResponse requestAccessToken(final String tokenUrl, final String clientId,
-            final String clientSecret, final String scope) throws IOException{
-        LOG.error("Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{} ", tokenUrl,
-                clientId, clientSecret, scope);
-        Response response = null;
-        try {
-
-           Map<String, String> parameters = new HashMap<>();
-           parameters.put("grant_type", GrantType.CLIENT_CREDENTIALS.getValue());
-           parameters.put("username", clientId+":"+clientSecret);
-           parameters.put("scope", scope);
-           
-            HttpClient client = HttpClientBuilder.create().build();
-           
-            LOG.error("Request for Access Token -  parameters:{} ", parameters);
-           //JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client).json(multivaluedHashMap).asJson();
-            JsonNode jsonNode = SimpleHttp.doGet(tokenUrl, client).json(parameters).asJson();
-            LOG.error("Request for Access Token -  jsonNode:{} ", jsonNode);
-            /*LOG.trace("Response for Access Token -  response:{}", response);
-            if (response.getStatus() == 200) {
-                String entity = response.readEntity(String.class);
-                TokenResponse tokenResponse = new TokenResponse();
-                tokenResponse.setEntity(entity);
-                tokenResponse.injectDataFromJson(entity);
-                return tokenResponse;
-            }*/
-        } finally {
-
-            if (response != null) {
-                response.close();
-            }
-        }
-        return null;
-    }
+   
     private Token getAccessToken(final String tokenUrl, final String clientId, final List<String> scopes) throws IOException {
         LOG.info("Access Token Request - tokenUrl:{}, clientId:{}, scopes:{}", tokenUrl, clientId, scopes);
 
@@ -170,6 +137,37 @@ public class JansUtil {
         }
         return null;
     }
+    
+    private static TokenResponse requestAccessToken(final String tokenUrl, final String clientId,
+            final String clientSecret, final String scope) throws IOException{
+        LOG.error("Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{} ", tokenUrl,
+                clientId, clientSecret, scope);
+        Response response = null;
+        try {
+
+           Map<String, String> parameters = new HashMap<>();
+           parameters.put("grant_type", GrantType.CLIENT_CREDENTIALS.getValue());
+           parameters.put("username", clientId);
+           parameters.put("password", clientSecret);
+           parameters.put("scope", scope);
+           parameters.put("client_id", clientId);
+           parameters.put("client_secret", clientSecret);
+           
+            HttpClient client = HttpClientBuilder.create().build();
+           
+            LOG.info("\n\n\n\n @@@@@ Request for Access Token -  parameters:{} ", parameters);
+            JsonNode jsonNode = SimpleHttp.doGet(tokenUrl, client).authBasic(clientId, clientSecret).json(parameters).asJson();
+            LOG.info("Request for Access Token -  jsonNode:{} ", jsonNode);
+
+        } finally {
+
+            if (response != null) {
+                response.close();
+            }
+        }
+        return null;
+    }
+    
     
     private static TokenResponse requestAccessToken6(final String tokenEndpoint, final String clientId,
             final String clientSecret, final String scope) throws IOException{
@@ -235,7 +233,7 @@ public class JansUtil {
             HttpClient client = HttpClientBuilder.create().build();
             //final MultivaluedHashMap<String, String> multivaluedHashMap = new MultivaluedHashMap<>(
               //      tokenRequest.getParameters());
-            LOG.error("\n\n\n *** Request for Access Token -  parameters:{} , {}", parameters,"***\n\n\n");
+            LOG.error("\n\n\n  Request for Access Token -  parameters:{} , {}", parameters,"***\n\n\n");
            //JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client).json(multivaluedHashMap).asJson();
             JsonNode jsonNode = SimpleHttp.doGet(tokenUrl, client).authBasic(clientId, clientSecret).json(parameters).asJson();
             LOG.error("Request for Access Token -  jsonNode:{} ", jsonNode);
