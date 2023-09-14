@@ -156,17 +156,17 @@ public class JansUtil {
                        .param("client_secret", clientSecret)
                        .param("authorization_method", "client_secret_basic")
                        .asJson();
-               LOG.info("\n\n ***** Thankyou Dearest Krishna POST Request for Access Token -  jsonNode:{} ", jsonNode);
+               LOG.info("\n\n ***** POST Request for Access Token -  jsonNode:{} ", jsonNode);
 
                //if(validateTokenScope(jsonNode,scope)) {
                token = this.getToken(jsonNode);
               // }
-               LOG.info("\n\n ***** Thankyou Dearest Raaha-Krishna POST Request for Access Token -  token:{} ", token);
+               LOG.info("\n\n ***** POST Request for Access Token -  token:{} ", token);
 
                
            }catch(Exception ex) {
                ex.printStackTrace();
-               LOG.error("\n\n\n ********************* Post 1  error is =  "+ex+"*****\n\n\n");
+               LOG.error("\n\n\n ********************* Post error is =  "+ex+"*****\n\n\n");
            }
         return token;
     }

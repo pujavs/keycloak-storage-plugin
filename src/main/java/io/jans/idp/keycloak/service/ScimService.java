@@ -117,10 +117,8 @@ public class ScimService {
             LOG.info(" postData() - client:{}, searchRequest:{}, accessToken:{}", client, searchRequest,accessToken);
            
             JsonNode jsonNode = SimpleHttp.doPost(uri, client).auth(accessToken).json(searchRequest).asJson();
-            //JsonNode jsonNode = SimpleHttp.doPost(uri, client)
-              //      .header("Authorization","Bearer " +accessToken)
-                //    .json(searchRequest).asJson();
-            LOG.info("\n\n Krishna mercy  postData() - jsonNode:{}", jsonNode);
+          
+            LOG.info("\n\n  postData() - jsonNode:{}", jsonNode);
             
             user = getUserResource(jsonNode);
             LOG.info(" postData() - user:{}", user);
