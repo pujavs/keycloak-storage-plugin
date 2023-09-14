@@ -14,6 +14,7 @@ import io.jans.as.model.common.ScopeType;
 import io.jans.as.model.uma.wrapper.Token;
 import io.jans.as.model.util.Util;
 import io.jans.idp.keycloak.config.JansConfigSource;
+import io.jans.scim.model.scim2.user.UserResource;
 import io.jans.idp.keycloak.client.JansTokenClient;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
@@ -26,9 +27,11 @@ import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.keycloak.broker.provider.util.SimpleHttp;
+import org.keycloak.util.JsonSerialization;
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient43Engine;
@@ -97,16 +100,14 @@ public class JansUtil {
       //**** Testing properties load - End
         
         String tokenUrl = getTokenEndpoint();
-        Token token = getAccessToken(tokenUrl, clientId, scope);
+        String token = getAccessToken(tokenUrl, clientId, scope);
         LOG.debug("oAuth AccessToken response - token:{}", token);
-        if (token != null) {
-            return token.getAccessToken();
-        }
-        return null;
+       
+        return token;
     }
     
    
-    private Token getAccessToken(final String tokenUrl, final String clientId, final List<String> scopes) throws IOException {
+    private String getAccessToken(final String tokenUrl, final String clientId, final List<String> scopes) throws IOException {
         LOG.info("Access Token Request - tokenUrl:{}, clientId:{}, scopes:{}", tokenUrl, clientId, scopes);
 
         // Get clientSecret
@@ -123,22 +124,110 @@ public class JansUtil {
 
         LOG.info("Scope required  - {}", scope);
 
-        TokenResponse tokenResponse = requestAccessToken(tokenUrl, clientId, clientSecret,
-                scope.toString());
-        if (tokenResponse != null) {
-
-            LOG.info("Token Response - tokenScope: {}, tokenAccessToken: {} ", tokenResponse.getScope(),
-                    tokenResponse.getAccessToken());
-            final String accessToken = tokenResponse.getAccessToken();
-            final Integer expiresIn = tokenResponse.getExpiresIn();
-            if (Util.allNotBlank(accessToken)) {
-                return new Token(null, null, accessToken, ScopeType.OPENID.getValue(), expiresIn);
-            }
-        }
-        return null;
+        String token = requestAccessToken(tokenUrl, clientId, clientSecret,scope.toString());
+        LOG.info("Final token token  - {}", token);
+        return token;
     }
     
-    private static TokenResponse requestAccessToken(final String tokenUrl, final String clientId,
+    private String requestAccessToken(final String tokenUrl, final String clientId,
+            final String clientSecret, final String scope) throws IOException{
+        LOG.error("Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{} ", tokenUrl,
+                clientId, clientSecret, scope);
+        String token = null;
+        try {
+
+            TokenRequest tokenRequest = new TokenRequest(GrantType.CLIENT_CREDENTIALS);
+            tokenRequest.setScope(scope);
+            tokenRequest.setAuthUsername(clientId);
+            tokenRequest.setAuthPassword(clientSecret);
+            tokenRequest.setGrantType(GrantType.CLIENT_CREDENTIALS);
+            tokenRequest.setAuthenticationMethod(AuthenticationMethod.CLIENT_SECRET_BASIC);
+            
+                      
+           HttpClient client = HttpClientBuilder.create().build();
+           JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
+                       .header("Authorization","Basic " + tokenRequest.getEncodedCredentials())
+                       .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED)
+                       .param("grant_type", "client_credentials")
+                       .param("username", clientId+":"+clientSecret)
+                       .param("scope",scope)
+                       .param("client_id", clientId)
+                       .param("client_secret", clientSecret)
+                       .param("authorization_method", "client_secret_basic")
+                       .asJson();
+               LOG.info("\n\n ***** Thankyou Dearest Krishna POST Request for Access Token -  jsonNode:{} ", jsonNode);
+
+               if(validateTokenScope(jsonNode,scope)) {
+               token = this.getToken(jsonNode);
+               }
+               LOG.info("\n\n ***** Thankyou Dearest Raaha-Krishna POST Request for Access Token -  token:{} ", token);
+
+               
+           }catch(Exception ex) {
+               ex.printStackTrace();
+               LOG.error("\n\n\n ********************* Post 1  error is =  "+ex+"*****\n\n\n");
+           }
+        return token;
+    }
+    
+   
+    private boolean validateTokenScope(JsonNode jsonNode,String scope) {
+        
+        LOG.info(" \n\n validateTokenScope() - jsonNode:{}, scope:{}", jsonNode, scope);
+        boolean validScope = false;
+        try {
+            
+            if (jsonNode != null && jsonNode.get("scope")!=null) {
+                    JsonNode value = jsonNode.get("scope");
+                    LOG.info("\n\n *** validateTokenScope() - value:{}, value.getClass():{}", value, value.getClass());
+                    
+                    if(value!=null) {
+                        String responseScope = value.toString(); 
+                        LOG.info("validateTokenScope() - scope:{}, responseScope:{}, responseScope.contains(scope):{}", scope, responseScope, responseScope.contains(scope));
+                        if(responseScope.contains(scope)){
+                            validScope = true;
+                        }
+                    }
+                   
+                }
+            LOG.info("validateTokenScope() - validScope:{}", validScope);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            LOG.error("\n\n Error while validating token scope from response is ex:{}", ex);
+        }
+        return validScope;
+        
+    }
+    
+    private String getToken(JsonNode jsonNode) {
+        LOG.info(" \n\n getToken() - jsonNode:{}", jsonNode);
+        System.out.println("getToken() - jsonNode = " + jsonNode + "\n\n");
+        String token = null;
+        try {
+            
+            if (jsonNode != null) { 
+                if(jsonNode.get("access_token")!=null) {
+                    JsonNode value = jsonNode.get("access_token");
+                    LOG.info("\n\n *** getToken() - value:{}, value.getClass():{}", value, value.getClass());
+                    
+                    if(value!=null) {
+                        token = value.toString(); 
+                    }
+                    LOG.info("getToken() - token:{}", token);
+                }
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            LOG.error("\n\n Error while getting token from response is ex:{}", ex);
+        }
+        return token;
+    }
+    
+    /*--------------------------------------------*/
+    
+    private String requestAccessToken_working(final String tokenUrl, final String clientId,
             final String clientSecret, final String scope) throws IOException{
         LOG.error("Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{} ", tokenUrl,
                 clientId, clientSecret, scope);
@@ -169,17 +258,20 @@ public class JansUtil {
            LOG.info("\n\n\n\n Final try Krishna @@@@@*** Request for Access Token for Post-  tokenUrl:{}, multivaluedHashMap:{} ", tokenUrl,multivaluedHashMap);
            
            try {
-               JsonNode jsonNode1 = SimpleHttp.doPost(tokenUrl, client)
+               JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
                        .header("Authorization","Basic " + tokenRequest.getEncodedCredentials())
                        .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED)
                        .param("grant_type", "client_credentials")
                        .param("username", clientId+":"+clientSecret)
-                       .param("scope", "scope")
+                       .param("scope",scope)
                        .param("client_id", clientId)
                        .param("client_secret", clientSecret)
                        .param("authorization_method", "client_secret_basic")
                        .asJson();
-               LOG.info("\n\n ***** Thankyou Krishna POST Request for Access Token -  jsonNode1:{} ", jsonNode1);
+               LOG.info("\n\n ***** Thankyou Krishna POST Request for Access Token -  jsonNode:{} ", jsonNode);
+
+               String accessToken = getToken(jsonNode);
+               LOG.info("\n\n ***** Thankyou Krishna POST Request for Access Token -  jsonNode:{} ", jsonNode);
 
                
            }catch(Exception ex) {
@@ -187,10 +279,7 @@ public class JansUtil {
                LOG.error("\n\n\n ********************* Post 1  error is =  "+ex+"*****\n\n\n");
            }
                
-                //JsonNode jsonNode2 = SimpleHttp.doPost(tokenUrl, client).header("Authorization","Basic " + tokenRequest.getEncodedCredentials()).header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED).acceptJson().param("user", clientId+":"+clientSecret).json(Entity.form(multivaluedHashMap)).asJson();
-           JsonNode jsonNode2 = SimpleHttp.doPost(tokenUrl, client).header("Authorization","Basic " + tokenRequest.getEncodedCredentials()).header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED).json(Entity.form(multivaluedHashMap)).asJson();
-           LOG.info("POST Request for Access Token -  jsonNode2:{} ", jsonNode2);
-
+            
         } finally {
 
             if (response != null) {
@@ -199,8 +288,8 @@ public class JansUtil {
         }
         return null;
     }
-    
-    /*--------------------------------------------*/
+        
+     /*--- working method above --------*/  
     public static TokenResponse requestAccessToken_TokenRequest(final String tokenUrl, final String clientId,
             final String clientSecret, final String scope) {
         LOG.info(" Latest Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{} ", tokenUrl,
