@@ -35,8 +35,7 @@ public class JansEventListenerProviderFactory implements EventListenerProviderFa
     @Override
     public void init(Config.Scope config) {
        LOG.info("\n\n\n latest JansEventListenerProviderFactory::init() - config:{},config.getPropertyNames():{}",config,config.getPropertyNames());
-        System.out.println("\n\n\n ** RemoteUserStorageProvider::init()- config = "+config );
-        
+               
         tokenUrl = config.get("url");
         clientId = config.get("client");
         

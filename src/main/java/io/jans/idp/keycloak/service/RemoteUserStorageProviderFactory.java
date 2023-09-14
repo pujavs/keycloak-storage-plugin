@@ -37,7 +37,7 @@ public class RemoteUserStorageProviderFactory implements UserStorageProviderFact
     @Override
     public RemoteUserStorageProvider create(KeycloakSession session, ComponentModel model) {
         LOG.info("\n\n\n RemoteUserStorageProviderFactory::create() - session:{}, model:{}",session, model);
-        System.out.println("\n\n\n ** RemoteUserStorageProvider::create()- session = "+session+" ,model = "+model );
+        
         return new RemoteUserStorageProvider(session, model);
     }
     
@@ -45,14 +45,14 @@ public class RemoteUserStorageProviderFactory implements UserStorageProviderFact
     public String getId() {
         String id = PROVIDER_NAME;
         LOG.info("id:{}",id);
-        System.out.println("id = "+id);
+        
         return id;
     }
     
     @Override
     public void init(Config.Scope config) {
         LOG.info("\n\n\n RemoteUserStorageProviderFactory::init() - config:{}",config);
-        System.out.println("\n\n\n ** RemoteUserStorageProvider::init()- config = "+config );
+        
         
         String tokenUrl = config.get("jans-token-url");
         String clientId = config.get("jans-client-id");
@@ -65,13 +65,13 @@ public class RemoteUserStorageProviderFactory implements UserStorageProviderFact
     @Override
     public void postInit(KeycloakSessionFactory factory) {
         LOG.info("\n\n\n RemoteUserStorageProviderFactory::postInit() - config:{}",factory);
-        System.out.println("\n\n\n ** RemoteUserStorageProvider::postInit()- config = "+factory );
+        
     }
 
     @Override
     public void close() {
         LOG.info("\n\n\n RemoteUserStorageProviderFactory::close() - Exit:{}");
-        System.out.println("\n\n\n ** RemoteUserStorageProvider::close()- **" );
+        
     }
 
 }

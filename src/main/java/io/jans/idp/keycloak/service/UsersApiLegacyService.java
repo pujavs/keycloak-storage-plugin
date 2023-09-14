@@ -36,21 +36,21 @@ public class UsersApiLegacyService {
     
     public UsersApiLegacyService(KeycloakSession session,ComponentModel model) {
         LOG.info(" session:{}, model:{}", session, model);
-        System.out.println("UsersApiLegacyService() - session = "+session+" , model = "+model);
+        
         this.session = session;
         this.model = model;
     }
     
     public UserResource getUserById(String inum) {
         LOG.info(" inum:{}", inum);
-        System.out.println("inum = "+inum);
+        
         try {
-            System.out.println("UsersApiLegacyService()::getUserById() - inum = "+inum);
+            
             return scimService.getUserById(inum);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on inum:{} from external service is:{} - {} ", inum, ex.getMessage(), ex);
-            System.out.println("Error fetching user based on inum="+inum+" from external service is->"+ex);
+            
         }
         return null;
     }
@@ -58,12 +58,12 @@ public class UsersApiLegacyService {
     public UserResource getUserByName(String username) {
         LOG.info(" username:{}", username);
         try {
-            System.out.println("UsersApiLegacyService()::getUserByName() - username = "+username);
+            
             return scimService.getUserByName(username);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on username:{} from external service is:{} - {} ", username, ex.getMessage(), ex);
-            System.out.println("Error fetching user based on username="+username+" from external service is->"+ex);
+            
         }
         return null;
     }
@@ -71,12 +71,12 @@ public class UsersApiLegacyService {
     public UserResource getUserByEmail(String email) {
         LOG.info(" email:{}", email);
         try {
-            System.out.println("UsersApiLegacyService()::getUserById() - email = "+email);
+            
             return scimService.getUserByEmail(email);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on email:{} from external service is:{} - {} ", email, ex.getMessage(), ex);
-            System.out.println("Error fetching user based on email="+email+" from external service is->"+ex);
+            
         }
         return null;
     }

@@ -53,7 +53,7 @@ public class ScimService {
         try {
         token = jansUtil.requestScimAccessToken();
         //String token = Constants.AUTH_TOKEN;
-        LOG.info(" token:{}", token);
+        LOG.info("ScimService::requestAccessToken() -  token:{}", token);
         }catch(Exception ex) {
             LOG.error(" Error while generating access token for SCIM endpoint is:{}", ex);
             throw new WebApplicationException("Error while generating access token for SCIM endpoint is = "+ex);
@@ -63,16 +63,15 @@ public class ScimService {
 
     public UserResource getUserById(String inum) {
         LOG.info(" inum:{}", inum);
-        System.out.println("inum = " + inum);
         try {
-            System.out.println("ScimService()::getUserById() - inum = " + inum);
+            
             String filter = "id eq \"" + inum + "\"";
             return postData(getScimUserSearchEndpoint() + "/" + inum, this.requestAccessToken(), filter);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on inum:{} from external service is:{} - {} ", inum, ex.getMessage(),
                     ex);
-            System.out.println("Error fetching user based on inum=" + inum + " from external service is->" + ex);
+            
         }
         return null;
     }
@@ -80,15 +79,13 @@ public class ScimService {
     public UserResource getUserByName(String username) {
         LOG.info(" username:{}", username);
         try {
-            System.out.println("ScimService()::getUserByName() - username = " + username);
+            
             String filter = "userName eq \"" + username + "\"";
             return postData(this.getScimUserSearchEndpoint(), this.requestAccessToken(), filter);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on username:{} from external service is:{} - {} ", username,
-                    ex.getMessage(), ex);
-            System.out
-                    .println("Error fetching user based on username=" + username + " from external service is->" + ex);
+                    ex.getMessage(), ex);           
         }
         return null;
     }
@@ -96,14 +93,14 @@ public class ScimService {
     public UserResource getUserByEmail(String email) {
         LOG.info(" email:{}", email);
         try {
-            System.out.println("ScimService()::getUserById() - email = " + email);
+            
             String filter = "emails[value eq \"" + email + "\"]";
             return postData(this.getScimUserSearchEndpoint(), this.requestAccessToken(), filter);
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user based on email:{} from external service is:{} - {} ", email, ex.getMessage(),
                     ex);
-            System.out.println("Error fetching user based on email=" + email + " from external service is->" + ex);
+            
         }
         return null;
     }
@@ -112,19 +109,22 @@ public class ScimService {
 
     public UserResource postData(String uri, String accessToken, String filter) {
         UserResource user = null;
+        LOG.info("ScimService::postData() -  uri:{}, accessToken:{}, filter:{}", uri, accessToken, filter);
         try {
             HttpClient client = HttpClientBuilder.create().build();
 
             SearchRequest searchRequest = createSearchRequest(filter);
-            LOG.info(" postData() - client:{}, searchRequest:{}", client, searchRequest);
-            System.out.println("postData() - client = " + client + ", searchRequest = " + searchRequest + " \n\n");
-
+            LOG.info(" postData() - client:{}, searchRequest:{}, accessToken:{}", client, searchRequest,accessToken);
+           
             JsonNode jsonNode = SimpleHttp.doPost(uri, client).auth(accessToken).json(searchRequest).asJson();
-            LOG.info("\n\n new  postData() - jsonNode:{}", jsonNode);
-            System.out.println("postData() - jsonNode = "+jsonNode+"\n\n");
-          
+            //JsonNode jsonNode = SimpleHttp.doPost(uri, client)
+              //      .header("Authorization","Bearer " +accessToken)
+                //    .json(searchRequest).asJson();
+            LOG.info("\n\n Krishna mercy  postData() - jsonNode:{}", jsonNode);
+            
+            user = getUserResource(jsonNode);
             LOG.info(" postData() - user:{}", user);
-            System.out.println("postData() - user = " + user + "\n\n");
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("\n\n Error while fetching data is ex:{}", ex);
@@ -138,13 +138,13 @@ public class ScimService {
         searchRequest.setFilter(filter);
 
         LOG.info(" createSearchRequest() - searchRequest:{}", searchRequest);
-        System.out.println("ScimService()::createSearchRequest() - searchRequest = " + searchRequest + " \n\n");
+        
         return searchRequest;
     }
 
     private UserResource getUserResource(JsonNode jsonNode) {
         LOG.info(" \n\n getUserResource() - jsonNode:{}", jsonNode);
-        System.out.println("getUserResource() - jsonNode = " + jsonNode + "\n\n");
+        
         UserResource user = null;
         try {
             

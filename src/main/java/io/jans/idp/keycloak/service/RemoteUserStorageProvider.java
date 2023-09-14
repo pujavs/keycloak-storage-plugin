@@ -40,8 +40,7 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
 
     public RemoteUserStorageProvider(KeycloakSession session, ComponentModel model) {
         LOG.info(" session:{}, model:{}", session, model);
-        System.out.println(" \n\n session="+session+", model="+model+", usersService="+usersService+"\n\n" );
-
+        
         this.session = session;
         this.model = model;
         this.usersService = new UsersApiLegacyService(session, model);
@@ -52,7 +51,7 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
      */
     public UserModel getUserById(RealmModel paramRealmModel, String id) {
         LOG.info("getUserById() paramRealmModel:{}, id:{}", paramRealmModel, id);
-        System.out.println("\n getUserById() using paramRealmModel = "+paramRealmModel+" , id="+id+"\n\n" );
+        
         UserModel userModel = null;
         try {
             UserResource user = usersService.getUserById(id);
@@ -60,17 +59,17 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
             if (user != null) {
                 userModel = createUserModel(paramRealmModel, user);
                 LOG.info("\n\n\n\n ***************** New userModel ="+userModel+"\n\n");
-                System.out.println(userModel.toString());
+                
                 LOG.info("userModel:{}", userModel);
             }
          
             LOG.info("User fetched with id:{} from external service is:{}", id, user);
-            System.out.println("\n getUserById()- User fetched with id ="+id+" from external service is="+user+"\n\n");
+            
 
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("Error fetching user id:{} from external service is:{} - {} ", id, ex.getMessage(), ex);
-            System.out.println("\n getUserById()- Error fetching user id ="+id+" from external service is ="+ex+"\n\n");
+            
         }
         return userModel;
     }
@@ -80,16 +79,16 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
      */
     public UserModel getUserByUsername(RealmModel paramRealmModel, String name) {
         LOG.info("getUserByUsername() paramRealmModel:{}, name:{}", paramRealmModel, name);
-        System.out.println("\n getUserByUsername()- using paramRealmModel = "+paramRealmModel+" name = "+name +"\n\n");
+        
         UserModel userModel = null;
         try {
             UserResource user = usersService.getUserByName(name);
             LOG.info("User fetched with name:{} from external service is:{}", name, user);
-            System.out.println("\n getUserByUsername()- with name = "+name+" from external service is = "+user+"\n\n");
+            
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("\n Error fetching user name:{}, from external service is:{} - {} ", name, ex.getMessage(), ex);
-            System.out.println("getUserById()- Error fetching user name ="+name+" from external service is ="+ex+"\n\n");
+            
         }
         return userModel;
     }
@@ -100,15 +99,15 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
 
     public void close() {
         LOG.info("createUserModel()::close()");
-        System.out.println("\n createUserModel()::close()\n" );
+        
     }
 
     private UserModel createUserModel(RealmModel realm, UserResource user) {
         LOG.info("\n\n\n createUserModel() - realm:{} , user:{}", realm, user+"\n\n\n");
-        System.out.println("\n createUserModel()- with realm = "+realm+" ,user = "+user +"\n\n");
+        
         UserModel userModel = new UserAdapter(session, realm, model, user);
         LOG.info("\n\n\n Final createUserModel() - userModel:{}", userModel);
-        System.out.println("\n createUserModel()- with userModel = "+userModel +"\n\n");
+        
         return userModel;
     }
 }
