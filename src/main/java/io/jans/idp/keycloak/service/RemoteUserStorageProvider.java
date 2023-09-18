@@ -4,7 +4,9 @@ import io.jans.scim.model.scim2.user.UserResource;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
+import io.jans.idp.keycloak.service.CredentialAuthenticatingService;
 import org.keycloak.broker.provider.util.SimpleHttp;
 import org.keycloak.component.ComponentModel;
 import org.keycloak.credential.CredentialInput;
@@ -29,7 +31,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RemoteUserStorageProvider implements UserLookupProvider, UserStorageProvider {
+public class RemoteUserStorageProvider implements CredentialInputValidator, UserLookupProvider, UserStorageProvider {
 
     private static Logger LOG = LoggerFactory.getLogger(RemoteUserStorageProvider.class);
     private static String AUTH_USER_ENDPOINT = "http://localhost:8080/jans-config-api/mgt/configuser/";
@@ -37,6 +39,8 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
     private KeycloakSession session;
     private ComponentModel model;
     private UsersApiLegacyService usersService;
+    private CredentialAuthenticatingService credentialAuthenticatingService = new CredentialAuthenticatingService();
+    protected Properties jansProperties = new Properties();
 
     public RemoteUserStorageProvider(KeycloakSession session, ComponentModel model) {
         LOG.info(" session:{}, model:{}", session, model);
@@ -44,7 +48,31 @@ public class RemoteUserStorageProvider implements UserLookupProvider, UserStorag
         this.session = session;
         this.model = model;
         this.usersService = new UsersApiLegacyService(session, model);
+        this.jansProperties = jansProperties;
     }
+    
+    @Override
+    public boolean supportsCredentialType(String credentialType) {
+        LOG.info(" supportsCredentialType() - credentialType:{}", credentialType);
+        return PasswordCredentialModel.TYPE.equals(credentialType);
+    }
+
+    @Override
+    public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
+        return user.credentialManager().isConfiguredFor(credentialType);
+    }
+    
+    @Override
+    public boolean isValid(RealmModel realm, UserModel user, CredentialInput credentialInput) {
+        LOG.info(" isValid() - realm:{}, user:{}, credentialInput:{}, user.getUsername():{}, ", realm, user, credentialInput,user.getUsername(), credentialInput.getChallengeResponse());
+        boolean verifyPasswordResponse = credentialAuthenticatingService.authenticateUser(user.getUsername(),credentialInput.getChallengeResponse());
+
+        ///if (verifyPasswordResponse == null)
+            return verifyPasswordResponse;
+
+        //return verifyPasswordResponse.getResult();
+    }
+    
 
     /**
      * Get user based on id

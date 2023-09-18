@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JacksonUtils;
 
+
 import io.jans.as.client.TokenClient;
 import io.jans.as.client.TokenRequest;
 import io.jans.as.client.TokenResponse;
@@ -22,12 +23,16 @@ import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.Response;
-
+import jakarta.ws.rs.WebApplicationException;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.*;
 
+
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -42,7 +47,15 @@ import org.slf4j.LoggerFactory;
 @RegisterProvider(JansTokenClient.class)
 public class JansUtil {
     private static Logger LOG = LoggerFactory.getLogger(JansUtil.class);
-    JansConfigSource jansConfigSource = new JansConfigSource();
+    private JansConfigSource jansConfigSource = new JansConfigSource();
+    private Map<String, String> configProperties = null;
+    
+    public JansUtil() {
+        configProperties = getProperties() ;
+        if(configProperties==null || configProperties.isEmpty()) {
+           throw new WebApplicationException("Config properties is null!!!"); 
+        }
+    }
     
     public Map<String, String> getProperties() {
         LOG.debug("\n\n *** JansUtil::Getting properties \n\n");
@@ -62,23 +75,27 @@ public class JansUtil {
 
     
     public String getTokenEndpoint() {
-        return Constants.TOKEN_ENDPOINT;
+        return configProperties.get("token.endpoint");
     }
-    
+   
     public String getScimUserEndpoint() {
-        return Constants.SCIM_USER_ENDPOINT;
+        return configProperties.get("scim.user.endpoint");
     }
     
     public String getScimUserSearchEndpoint() {
-        return Constants.SCIM_USER_SEARCH_ENDPOINT;
-    }
-    
-    public String getClientDecryptPassword() {
-        return Constants.PASSWORD;
+        return configProperties.get("scim.user.search.endpoint");
     }
     
     public String getClientId() {
-        return Constants.CLIENT_ID;
+        return configProperties.get("client.id");
+    }
+    
+    public String getClientPassword() {
+        return configProperties.get("client.password");
+    }
+    
+    public String getScimOauthScope() {
+        return configProperties.get("scim.oauth.scope");
     }
     
     public static Builder getClientBuilder(String url) {
@@ -87,7 +104,7 @@ public class JansUtil {
     
     public String requestScimAccessToken() throws IOException{
         List<String> scopes = new ArrayList<>();
-        scopes.add(Constants.SCIM_OAUTH);
+        scopes.add(getScimOauthScope());
         String token = requestAccessToken(getClientId(), scopes);
         LOG.info("token:{} ", token);
         return token;
@@ -95,10 +112,6 @@ public class JansUtil {
 
     public String requestAccessToken(final String clientId, final List<String> scope) throws IOException{
         LOG.info("Request for AccessToken - clientId:{}, scope:{} ", clientId, scope);
-        
-        //**** Testing properties load - Start
-        getProperties();
-      //**** Testing properties load - End
         
         String tokenUrl = getTokenEndpoint();
         String token = getAccessToken(tokenUrl, clientId, scope);
@@ -108,11 +121,11 @@ public class JansUtil {
     }
     
    
-    private String getAccessToken(final String tokenUrl, final String clientId, final List<String> scopes) throws IOException {
+    public String getAccessToken(final String tokenUrl, final String clientId, final List<String> scopes) throws IOException {
         LOG.info("Access Token Request - tokenUrl:{}, clientId:{}, scopes:{}", tokenUrl, clientId, scopes);
 
         // Get clientSecret
-        String clientSecret = this.getClientDecryptPassword();
+        String clientSecret = this.getClientPassword();
         LOG.info("Access Token Request - clientId:{}, clientSecret:{}", clientId, clientSecret);
 
         // distinct scopes
@@ -125,30 +138,30 @@ public class JansUtil {
 
         LOG.info("Scope required  - {}", scope);
 
-        String token = requestAccessToken(tokenUrl, clientId, clientSecret,scope.toString());
+        String token = requestAccessToken(tokenUrl, clientId, clientSecret,scope.toString(),GrantType.CLIENT_CREDENTIALS,AuthenticationMethod.CLIENT_SECRET_BASIC,MediaType.APPLICATION_FORM_URLENCODED);
         LOG.info("Final token token  - {}", token);
         return token;
     }
     
-    private String requestAccessToken(final String tokenUrl, final String clientId,
-            final String clientSecret, final String scope) throws IOException{
-        LOG.debug("Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{} ", tokenUrl,
-                clientId, clientSecret, scope);
+    public String requestAccessToken(final String tokenUrl, final String clientId,
+            final String clientSecret, final String scope,GrantType grantType, AuthenticationMethod authenticationMethod, String mediaType) throws IOException{
+        LOG.debug("Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}", tokenUrl,
+                clientId, clientSecret, scope, grantType, authenticationMethod, mediaType);
         String token = null;
         try {
 
-            TokenRequest tokenRequest = new TokenRequest(GrantType.CLIENT_CREDENTIALS);
+            TokenRequest tokenRequest = new TokenRequest(grantType);
             tokenRequest.setScope(scope);
             tokenRequest.setAuthUsername(clientId);
             tokenRequest.setAuthPassword(clientSecret);
-            tokenRequest.setGrantType(GrantType.CLIENT_CREDENTIALS);
-            tokenRequest.setAuthenticationMethod(AuthenticationMethod.CLIENT_SECRET_BASIC);
+            tokenRequest.setGrantType(grantType);
+            tokenRequest.setAuthenticationMethod(authenticationMethod);
             
-                      
+           LOG.debug("  tokenRequest.getEncodedCredentials():{}, this.getEncodedCredentials():{}", tokenRequest.getEncodedCredentials(),this.getEncodedCredentials(clientId,clientSecret));     
            HttpClient client = HttpClientBuilder.create().build();
            JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
                        .header("Authorization","Basic " + tokenRequest.getEncodedCredentials())
-                       .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED)
+                       .header("Content-Type", mediaType)
                        .param("grant_type", "client_credentials")
                        .param("username", clientId+":"+clientSecret)
                        .param("scope",scope)
@@ -228,6 +241,36 @@ public class JansUtil {
         }
         return token;
     }
+    
+    private boolean hasCredentials(String authUsername, String authPassword) {
+        return(StringUtils.isNotBlank(authUsername) && StringUtils.isNotBlank(authPassword)) ;
+    }
+    
+    /**
+     * Returns the client credentials (URL encoded).
+     *
+     * @return The client credentials.
+     */
+    private String getCredentials(String authUsername, String authPassword) throws UnsupportedEncodingException {
+        LOG.info("getCredentials() - authUsername:{}, authPassword:{}", authUsername, authPassword);
+        return URLEncoder.encode(authUsername, Util.UTF8_STRING_ENCODING)
+                + ":"
+                + URLEncoder.encode(authPassword, Util.UTF8_STRING_ENCODING);
+    }
    
+    private String getEncodedCredentials(String authUsername, String authPassword) {
+        LOG.info("getEncodedCredentials() - authUsername:{}, authPassword:{}", authUsername, authPassword);
+        try {
+            if (hasCredentials(authUsername,authPassword)) {
+                return Base64.encodeBase64String(Util.getBytes(getCredentials(authUsername,authPassword)));
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    
+    
 
 }

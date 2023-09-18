@@ -12,7 +12,7 @@ import io.jans.as.common.util.AttributeConstants;
 import io.jans.scim.model.scim2.user.UserResource;
 
 import java.io.IOException;
-
+import java.util.Properties;
 
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
@@ -33,6 +33,7 @@ public class UsersApiLegacyService {
     
     private KeycloakSession session;
     private ComponentModel model;
+    protected Properties jansProperties = new Properties();
     
     public UsersApiLegacyService(KeycloakSession session,ComponentModel model) {
         LOG.info(" session:{}, model:{}", session, model);
