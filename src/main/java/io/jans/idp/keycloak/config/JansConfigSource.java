@@ -23,7 +23,7 @@ public class JansConfigSource implements ConfigSource {
 
     private static Logger LOG = LoggerFactory.getLogger(JansConfigSource.class);
     private String CONFIG_FILE_PATH = null;
-    private static final String CONFIG_FILE_NAME = "jans-keycloak.properties";
+    private static final String CONFIG_FILE_NAME = "jans-keycloak-storage-api.properties";
     private Properties properties = null;
     Map<String, String> propertiesMap = new HashMap<>();
     
@@ -109,18 +109,18 @@ public class JansConfigSource implements ConfigSource {
      */
 
     private Properties loadProperties() {
-        LOG.info("\n\n\n ***** RemoteUserStorageProviderFactory::loadProperties() - Properties form Config.Scope ");
+        LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - Properties form Config.Scope ");
 
         try {
             // Get file path
             String filePath = getQualifiedFileName();
-            LOG.info("\n\n\n ***** RemoteUserStorageProviderFactory::loadProperties() - filePath:{}", filePath);
+            LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - filePath:{}", filePath);
 
-            if (StringUtils.isBlank(filePath)) {
+            if (StringUtils.isNotBlank(filePath)) {
 
                 // load the file handle for main.properties
                 FileInputStream file = new FileInputStream(filePath);
-                LOG.info("\n\n\n ***** RemoteUserStorageProviderFactory::loadProperties() - file =" + file + "\n\n");
+                LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - file =" + file + "\n\n");
                 ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
                 try (InputStream inputStream = loader.getResourceAsStream(getQualifiedFileName())) {
@@ -134,7 +134,7 @@ public class JansConfigSource implements ConfigSource {
                     LOG.error("\n\n Failed to load configuration from : " + filePath, e);
                     throw new WebApplicationException("Failed to load configuration from " + filePath, e);
                 }
-                LOG.info("\n\n\n ***** RemoteUserStorageProviderFactory::loadProperties() - loading file \n\n");
+                LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - loading file \n\n");
                 // load all the properties from this file
                 properties.load(file);
                 properties = new Properties();
