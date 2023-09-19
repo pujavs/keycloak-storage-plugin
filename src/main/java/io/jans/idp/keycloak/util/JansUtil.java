@@ -166,6 +166,38 @@ public class JansUtil {
         }
         return token;
     }
+    
+    public String requestUserToken(final String tokenUrl, final String username, final String password,
+            final String scope, GrantType grantType, AuthenticationMethod authenticationMethod, String mediaType)
+            throws IOException {
+        LOG.info(
+                "JansUtil::requestUserToken() - Request for Access Token -  tokenUrl:{}, username:{}, password:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}",
+                tokenUrl, username, password, scope, grantType, authenticationMethod, mediaType);
+        String token = null;
+        try {
+            String clientId = this.getClientId();
+            String clientSecret = this.getClientPassword();
+
+            LOG.info(" JansUtil::requestUserToken() - clientId:{} , clientSecret:{}, this.getEncodedCredentials():{}", clientId, clientSecret, this.getEncodedCredentials(clientId, clientSecret));
+            HttpClient client = HttpClientBuilder.create().build();
+            JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
+                    .header("Authorization", "Basic " + this.getEncodedCredentials(clientId, clientSecret))
+                    .header("Content-Type", mediaType).param("grant_type", "client_credentials")
+                    .param("username", username + ":" + password).param("scope", scope).param("client_id", clientId)
+                    .param("client_secret", clientSecret).param("authorization_method", "client_secret_basic").asJson();
+            LOG.info("\n\n ***** JansUtil::requestUserToken() - POST Request for User Token -  jsonNode:{} ", jsonNode);
+
+            
+            token = this.getToken(jsonNode);
+            
+            LOG.info("\n\n ***** JansUtil::requestUserToken() -POST Request for Access Token -  token:{} ", token);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            LOG.error("\n\n\n ********************* JansUtil::requestUserToken() - Post error is =  " + ex + "*****\n\n\n");
+        }
+        return token;
+    }
 
     private boolean validateTokenScope(JsonNode jsonNode, String scope) {
 

@@ -15,12 +15,12 @@ public class CredentialAuthenticatingService {
     private static Logger LOG = LoggerFactory.getLogger(CredentialAuthenticatingService.class);
     private static JansUtil jansUtil = new JansUtil();
 
-   public boolean authenticateUser(final String clientId, final String clientSecret) {
-        LOG.info("CredentialAuthenticatingService::authenticateUser() -  clientId:{}, clientSecret:{} ", clientId, clientSecret);
+   public boolean authenticateUser(final String username, final String password) {
+        LOG.info("CredentialAuthenticatingService::authenticateUser() -  username:{}, password:{} ", username, password);
         boolean isValid = false;
         try {
 
-            String token = jansUtil.requestAccessToken(jansUtil.getTokenEndpoint(), clientId, clientSecret, null,
+            String token = jansUtil.requestUserToken(jansUtil.getTokenEndpoint(), username, password, null,
                     GrantType.RESOURCE_OWNER_PASSWORD_CREDENTIALS, AuthenticationMethod.CLIENT_SECRET_POST,
                     MediaType.APPLICATION_FORM_URLENCODED);
 
