@@ -1,7 +1,6 @@
 package io.jans.idp.keycloak.config;
 
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.Collections;
@@ -9,8 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import jakarta.ws.rs.WebApplicationException;
 
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.microprofile.config.spi.ConfigSource;
@@ -29,17 +26,12 @@ public class JansConfigSource implements ConfigSource {
     Map<String, String> propertiesMap = new HashMap<>();
 
     public JansConfigSource() {
-        this.CONFIG_FILE_PATH = System.getProperty(Constants.JANS_CONFIG_PROP_PATH);
+        String configFilePath = System.getProperty(Constants.JANS_CONFIG_PROP_PATH);
         LOG.info("\n\n this.CONFIG_FILE_PATH:{}", CONFIG_FILE_PATH);
-    }
-
-    public JansConfigSource(String configFilePath) {
-        LOG.info("\n\n configFilePath:{}", configFilePath);
-
         if (StringUtils.isBlank(configFilePath)) {
-            throw new ComponentValidationException("Cannot load config property file as path null !!!");
+            throw new ComponentValidationException(
+                    "Configuration property file path `System property` not set, please verify.");
         }
-
         this.CONFIG_FILE_PATH = configFilePath;
         this.loadProperties();
     }
@@ -90,42 +82,24 @@ public class JansConfigSource implements ConfigSource {
         return this.CONFIG_FILE_PATH + fileSeparator + CONFIG_FILE_NAME;
     }
 
-    /*
-     * private Properties loadProperties() {
-     * LOG.debug("\n\n JansConfigSource()::loadProperties() \n\n\n"); LOG.
-     * debug("\n\n JansConfigSource()::loadProperties() - getQualifiedFileName():{}"
-     * , getQualifiedFileName());
-     * 
-     * // Load the properties file ClassLoader loader =
-     * Thread.currentThread().getContextClassLoader(); try ( InputStream inputStream
-     * = loader.getResourceAsStream(getQualifiedFileName())) { properties = new
-     * Properties(); properties.load(inputStream);
-     * properties.stringPropertyNames().stream().forEach(key ->
-     * propertiesMap.put(key, properties.getProperty(key)));
-     * LOG.debug("\n\n JansConfigSource()::loadProperties() - properties :{} {}",
-     * properties,"\n\n\n"); return properties; } catch (Exception e) {
-     * LOG.error("\n\n **2**  Failed to load configuration from : " + FILE_CONFIG,
-     * e); throw new WebApplicationException("Failed to load configuration from "+
-     * FILE_CONFIG, e); } }
-     */
-
     private Properties loadProperties() {
         LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - Properties form Config.Scope ");
         FileInputStream file = null;
         try {
             // Get file path
             String filePath = getQualifiedFileName();
-            LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - filePath:{}", filePath);
+            LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - properties:{}, filePath:{}", properties,
+                    filePath);
 
+            // Load properties only once
+            //if (properties == null && properties.isEmpty() && StringUtils.isNotBlank(filePath)) {
             if (StringUtils.isNotBlank(filePath)) {
 
                 // load the file handle for main.properties
                 file = new FileInputStream(filePath);
                 LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - file =" + file + "\n\n");
-                ClassLoader loader = Thread.currentThread().getContextClassLoader();
-
                 if (file != null) {
-                    LOG.info("\n\n\n ***** RemoteUserStorageProviderFactory::readFile() - loading file \n\n");
+                    LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - loading file \n\n");
                     // load all the properties from this file
                     properties = new Properties();
                     properties.load(file);
