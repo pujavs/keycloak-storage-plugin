@@ -16,7 +16,7 @@ public class CredentialAuthenticatingService {
     private static JansUtil jansUtil = new JansUtil();
 
    public boolean authenticateUser(final String clientId, final String clientSecret) {
-        LOG.debug("CredentialAuthenticatingService -  clientId:{}, clientSecret:{} ", clientId, clientSecret);
+        LOG.info("CredentialAuthenticatingService::authenticateUser() -  clientId:{}, clientSecret:{} ", clientId, clientSecret);
         boolean isValid = false;
         try {
 
@@ -24,12 +24,12 @@ public class CredentialAuthenticatingService {
                     GrantType.RESOURCE_OWNER_PASSWORD_CREDENTIALS, AuthenticationMethod.CLIENT_SECRET_POST,
                     MediaType.APPLICATION_FORM_URLENCODED);
 
-            LOG.info("Final token token  - {}", token);
+            LOG.info("CredentialAuthenticatingService::authenticateUser() -  Final token token  - {}", token);
            
             isValid = true;
         } catch (Exception ex) {
             ex.printStackTrace();
-            LOG.error("\n\n\n ********************* Post error is =  " + ex + "*****\n\n\n");
+            LOG.error("\n\n\n ********************* CredentialAuthenticatingService::authenticateUser() -   Error while authenticating is :{}  " + ex + "*****\n\n\n");
         }
         return isValid;
     }

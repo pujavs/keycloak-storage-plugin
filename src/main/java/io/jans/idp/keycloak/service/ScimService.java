@@ -1,37 +1,17 @@
 package io.jans.idp.keycloak.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.util.ClassUtil;
 
 import org.keycloak.broker.provider.util.SimpleHttp;
-import org.keycloak.component.ComponentModel;
-import org.keycloak.models.KeycloakSession;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-import io.jans.as.common.util.AttributeConstants;
+import io.jans.idp.keycloak.util.JansUtil;
 import io.jans.scim.model.scim2.SearchRequest;
 import io.jans.scim.model.scim2.user.UserResource;
-import io.jans.scim2.client.rest.ClientSideService;
-import io.jans.scim.model.scim2.ListResponse;
-import io.jans.orm.model.PagedResult;
 
-import io.jans.idp.keycloak.util.Constants;
-import io.jans.idp.keycloak.util.JansUtil;
-
-import java.io.IOException;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.Invocation.Builder;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.WebApplicationException;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.keycloak.util.JsonSerialization;

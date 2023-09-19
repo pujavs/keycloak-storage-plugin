@@ -86,7 +86,7 @@ public class JansUtil {
     }
 
     public String requestScimAccessToken() throws IOException {
-        LOG.debug(" \n\n\n ***  JansUtil::requestScimAccessToken() ");
+        LOG.info(" \n\n\n ***  JansUtil::requestScimAccessToken() ");
         List<String> scopes = new ArrayList<>();
         scopes.add(getScimOauthScope());
         String token = requestAccessToken(getClientId(), scopes);
@@ -99,7 +99,7 @@ public class JansUtil {
 
         String tokenUrl = getTokenEndpoint();
         String token = getAccessToken(tokenUrl, clientId, scope);
-        LOG.debug("JansUtil::requestAccessToken() - oAuth AccessToken response - token:{}", token);
+        LOG.info("JansUtil::requestAccessToken() - oAuth AccessToken response - token:{}", token);
 
         return token;
     }
@@ -132,7 +132,7 @@ public class JansUtil {
     public String requestAccessToken(final String tokenUrl, final String clientId, final String clientSecret,
             final String scope, GrantType grantType, AuthenticationMethod authenticationMethod, String mediaType)
             throws IOException {
-        LOG.debug(
+        LOG.info(
                 "JansUtil::requestAccessToken() - Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}",
                 tokenUrl, clientId, clientSecret, scope, grantType, authenticationMethod, mediaType);
         String token = null;
@@ -145,7 +145,7 @@ public class JansUtil {
             tokenRequest.setGrantType(grantType);
             tokenRequest.setAuthenticationMethod(authenticationMethod);
 
-            LOG.debug(" JansUtil::requestAccessToken() - tokenRequest.getEncodedCredentials():{}, this.getEncodedCredentials():{}",
+            LOG.info(" JansUtil::requestAccessToken() - tokenRequest.getEncodedCredentials():{}, this.getEncodedCredentials():{}",
                     tokenRequest.getEncodedCredentials(), this.getEncodedCredentials(clientId, clientSecret));
             HttpClient client = HttpClientBuilder.create().build();
             JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
@@ -200,7 +200,7 @@ public class JansUtil {
     }
 
     private String getToken(JsonNode jsonNode) {
-        LOG.info(" \n\n getToken() - jsonNode:{}", jsonNode);
+        LOG.info(" \n\n JansUtil::getToken() - jsonNode:{}", jsonNode);
 
         String token = null;
         try {
@@ -208,7 +208,7 @@ public class JansUtil {
             if (jsonNode != null) {
                 if (jsonNode.get("access_token") != null) {
                     JsonNode value = jsonNode.get("access_token");
-                    LOG.info("\n\n *** getToken() - value:{}, value.getClass():{}", value, value.getClass());
+                    LOG.info("\n\n *** JansUtil::getToken() - value:{}, value.getClass():{}", value, value.getClass());
 
                     if (value != null) {
                         token = value.asText();

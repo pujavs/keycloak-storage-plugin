@@ -13,12 +13,9 @@ import org.keycloak.models.UserModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapter;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 
@@ -32,7 +29,7 @@ public class UserAdapter extends AbstractUserAdapter {
     public UserAdapter(KeycloakSession session, RealmModel realm, ComponentModel model, UserResource user) {
        
         super(session, realm, model);
-        LOG.error(" model:{}, user:{}, storageProviderModel.getId():{}, user.getId():{}", model, user,storageProviderModel,storageProviderModel.getId(),user.getId());
+        LOG.debug(" UserAdapter() - model:{}, user:{}, storageProviderModel.getId():{}, user.getId():{}", model, user,storageProviderModel,storageProviderModel.getId(),user.getId());
         this.storageId = new StorageId(storageProviderModel.getId(), user.getId());
         this.user = user;
     }
