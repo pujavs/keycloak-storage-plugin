@@ -27,7 +27,7 @@ public class JansConfigSource implements ConfigSource {
 
     public JansConfigSource() {
         String configFilePath = System.getProperty(Constants.JANS_CONFIG_PROP_PATH);
-        LOG.info("\n\n this.CONFIG_FILE_PATH:{}", CONFIG_FILE_PATH);
+        LOG.info("\n\n this.configFilePath:{}", configFilePath);
         if (StringUtils.isBlank(configFilePath)) {
             throw new ComponentValidationException(
                     "Configuration property file path `System property` not set, please verify.");
@@ -61,8 +61,8 @@ public class JansConfigSource implements ConfigSource {
 
     @Override
     public String getValue(String name) {
-        LOG.info("\n\n JansConfigSource()::getValue() - name:{}", name);
         try {
+            LOG.info("\n JansConfigSource()::getValue() - name:{} - :{}", name, properties.getProperty(name));
             return properties.getProperty(name);
         } catch (Exception e) {
             LOG.error("\n\n Unable to read properties from file: " + CONFIG_FILE_NAME, e);
@@ -78,7 +78,7 @@ public class JansConfigSource implements ConfigSource {
 
     public String getQualifiedFileName() {
         String fileSeparator = FileSystems.getDefault().getSeparator();
-        LOG.info("\n\n JansConfigSource()::getValue() - fileSeparator:{}", fileSeparator);
+        LOG.info("\n\n JansConfigSource()::getQualifiedFileName() - fileSeparator:{}", fileSeparator);
         return this.CONFIG_FILE_PATH + fileSeparator + CONFIG_FILE_NAME;
     }
 

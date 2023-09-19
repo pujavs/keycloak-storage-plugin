@@ -48,81 +48,69 @@ public class JansUtil {
     private Map<String, String> configProperties = null;
 
     public JansUtil() {
-        configProperties = getProperties();
+        LOG.debug("\n\n *** JansUtil() - Getting properties \n\n");
+        configProperties = jansConfigSource.getProperties();
         if (configProperties == null || configProperties.isEmpty()) {
             throw new WebApplicationException("Config properties is null!!!");
         }
     }
 
-    public Map<String, String> getProperties() {
-        LOG.debug("\n\n *** JansUtil::Getting properties \n\n");
-        Map<String, String> props = jansConfigSource.getProperties();
-        LOG.debug("\n\n JansUtil::getProperties:{}", props);
-
-        LOG.debug("\n\n JansUtil::getProperties props.get(token.endpoint):{}", props.get("token.endpoint"));
-
-        getPropertyNames();
-        return props;
-    }
-
-    public Set<String> getPropertyNames() {
-        LOG.debug(" \n\n\n ***  JansUtil - getPropertyNames():{}", jansConfigSource.getPropertyNames());
-        return jansConfigSource.getPropertyNames();
-    }
-
     public String getTokenEndpoint() {
+        LOG.debug(" \n\n\n ***  JansUtil::getTokenEndpoint() - configProperties.get(\"token.endpoint\")():{}", configProperties.get("token.endpoint"));
         return configProperties.get("token.endpoint");
     }
 
     public String getScimUserEndpoint() {
+        LOG.debug(" \n\n\n ***  JansUtil::getScimUserEndpoint() - configProperties.get(\"scim.user.endpoint\")():{}", configProperties.get("scim.user.endpoint"));
         return configProperties.get("scim.user.endpoint");
     }
 
     public String getScimUserSearchEndpoint() {
+        LOG.debug(" \n\n\n ***  JansUtil::getScimUserSearchEndpoint() - configProperties.get(\"scim.user.search.endpoint\")():{}", configProperties.get("scim.user.search.endpoint"));
         return configProperties.get("scim.user.search.endpoint");
     }
 
     public String getClientId() {
+        LOG.debug(" \n\n\n ***  JansUtil::getClientId() - configProperties.get(\"client.id\")():{}", configProperties.get("client.id"));
         return configProperties.get("client.id");
     }
 
     public String getClientPassword() {
+        LOG.debug(" \n\n\n ***  JansUtil::getClientPassword() - configProperties.get(\"client.password\")():{}", configProperties.get("client.password"));
         return configProperties.get("client.password");
     }
 
     public String getScimOauthScope() {
+        LOG.debug(" \n\n\n ***  JansUtil::getScimOauthScope() - configProperties.get(\"scim.oauth.scope\")():{}", configProperties.get("scim.oauth.scope"));
         return configProperties.get("scim.oauth.scope");
     }
 
-    public static Builder getClientBuilder(String url) {
-        return ClientBuilder.newClient().target(url).request();
-    }
-
     public String requestScimAccessToken() throws IOException {
+        LOG.debug(" \n\n\n ***  JansUtil::requestScimAccessToken() ");
         List<String> scopes = new ArrayList<>();
         scopes.add(getScimOauthScope());
         String token = requestAccessToken(getClientId(), scopes);
-        LOG.info("token:{} ", token);
+        LOG.info("JansUtil::requestScimAccessToken() - token:{} ", token);
         return token;
     }
 
     public String requestAccessToken(final String clientId, final List<String> scope) throws IOException {
-        LOG.info("Request for AccessToken - clientId:{}, scope:{} ", clientId, scope);
+        LOG.info("JansUtil::requestAccessToken() - Request for AccessToken - clientId:{}, scope:{} ", clientId, scope);
 
         String tokenUrl = getTokenEndpoint();
         String token = getAccessToken(tokenUrl, clientId, scope);
-        LOG.debug("oAuth AccessToken response - token:{}", token);
+        LOG.debug("JansUtil::requestAccessToken() - oAuth AccessToken response - token:{}", token);
 
         return token;
     }
 
     public String getAccessToken(final String tokenUrl, final String clientId, final List<String> scopes)
             throws IOException {
-        LOG.info("Access Token Request - tokenUrl:{}, clientId:{}, scopes:{}", tokenUrl, clientId, scopes);
+        LOG.info("JansUtil::getAccessToken() - Access Token Request - tokenUrl:{}, clientId:{}, scopes:{}", tokenUrl, clientId, scopes);
 
         // Get clientSecret
         String clientSecret = this.getClientPassword();
-        LOG.info("Access Token Request - clientId:{}, clientSecret:{}", clientId, clientSecret);
+        LOG.info("JansUtil::getAccessToken() - Access Token Request - clientId:{}, clientSecret:{}", clientId, clientSecret);
 
         // distinct scopes
         Set<String> scopesSet = new HashSet<>(scopes);
@@ -132,12 +120,12 @@ public class JansUtil {
             scope.append(" ").append(s);
         }
 
-        LOG.info("Scope required  - {}", scope);
+        LOG.info("JansUtil::getAccessToken() - Scope required  - {}", scope);
 
         String token = requestAccessToken(tokenUrl, clientId, clientSecret, scope.toString(),
                 GrantType.CLIENT_CREDENTIALS, AuthenticationMethod.CLIENT_SECRET_BASIC,
                 MediaType.APPLICATION_FORM_URLENCODED);
-        LOG.info("Final token token  - {}", token);
+        LOG.info("JansUtil::getAccessToken() - Final token token  - {}", token);
         return token;
     }
 
@@ -145,7 +133,7 @@ public class JansUtil {
             final String scope, GrantType grantType, AuthenticationMethod authenticationMethod, String mediaType)
             throws IOException {
         LOG.debug(
-                "Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}",
+                "JansUtil::requestAccessToken() - Request for Access Token -  tokenUrl:{}, clientId:{}, clientSecret:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}",
                 tokenUrl, clientId, clientSecret, scope, grantType, authenticationMethod, mediaType);
         String token = null;
         try {
@@ -157,7 +145,7 @@ public class JansUtil {
             tokenRequest.setGrantType(grantType);
             tokenRequest.setAuthenticationMethod(authenticationMethod);
 
-            LOG.debug("  tokenRequest.getEncodedCredentials():{}, this.getEncodedCredentials():{}",
+            LOG.debug(" JansUtil::requestAccessToken() - tokenRequest.getEncodedCredentials():{}, this.getEncodedCredentials():{}",
                     tokenRequest.getEncodedCredentials(), this.getEncodedCredentials(clientId, clientSecret));
             HttpClient client = HttpClientBuilder.create().build();
             JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
@@ -165,23 +153,23 @@ public class JansUtil {
                     .header("Content-Type", mediaType).param("grant_type", "client_credentials")
                     .param("username", clientId + ":" + clientSecret).param("scope", scope).param("client_id", clientId)
                     .param("client_secret", clientSecret).param("authorization_method", "client_secret_basic").asJson();
-            LOG.info("\n\n ***** POST Request for Access Token -  jsonNode:{} ", jsonNode);
+            LOG.info("\n\n ***** JansUtil::requestAccessToken() - POST Request for Access Token -  jsonNode:{} ", jsonNode);
 
             // if(validateTokenScope(jsonNode,scope)) {
             token = this.getToken(jsonNode);
             // }
-            LOG.info("\n\n ***** POST Request for Access Token -  token:{} ", token);
+            LOG.info("\n\n ***** JansUtil::requestAccessToken() -POST Request for Access Token -  token:{} ", token);
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            LOG.error("\n\n\n ********************* Post error is =  " + ex + "*****\n\n\n");
+            LOG.error("\n\n\n ********************* JansUtil::requestAccessToken() - Post error is =  " + ex + "*****\n\n\n");
         }
         return token;
     }
 
     private boolean validateTokenScope(JsonNode jsonNode, String scope) {
 
-        LOG.info(" \n\n validateTokenScope() - jsonNode:{}, scope:{}", jsonNode, scope);
+        LOG.info(" \n\n JansUtil::validateTokenScope() - jsonNode:{}, scope:{}", jsonNode, scope);
         boolean validScope = false;
         try {
 
@@ -189,11 +177,11 @@ public class JansUtil {
 
             if (jsonNode != null && jsonNode.get("scope") != null) {
                 JsonNode value = jsonNode.get("scope");
-                LOG.info("\n\n *** validateTokenScope() - value:{}, value.getClass():{}", value, value.getClass());
+                LOG.info("\n\n *** JansUtil::validateTokenScope() -  value:{}, value.getClass():{}", value, value.getClass());
 
                 if (value != null) {
                     String responseScope = value.toString();
-                    LOG.info("validateTokenScope() - scope:{}, responseScope:{}, responseScope.contains(scope):{}",
+                    LOG.info("JansUtil::validateTokenScope() - scope:{}, responseScope:{}, responseScope.contains(scope):{}",
                             scope, responseScope, responseScope.contains(scope));
                     if (responseScope.contains(scope)) {
                         validScope = true;
@@ -201,11 +189,11 @@ public class JansUtil {
                 }
 
             }
-            LOG.info("validateTokenScope() - validScope:{}", validScope);
+            LOG.info("JansUtil::validateTokenScope() - validScope:{}", validScope);
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            LOG.error("\n\n Error while validating token scope from response is ex:{}", ex);
+            LOG.error("\n\n JansUtil::validateTokenScope() - Error while validating token scope from response is ex:{}", ex);
         }
         return validScope;
 

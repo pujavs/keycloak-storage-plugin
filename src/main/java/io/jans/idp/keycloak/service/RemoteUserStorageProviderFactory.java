@@ -1,6 +1,5 @@
 package io.jans.idp.keycloak.service;
 
-import io.jans.idp.keycloak.config.JansConfigSource;
 import io.jans.idp.keycloak.util.Constants;
 
 import org.keycloak.Config;
@@ -16,8 +15,6 @@ public class RemoteUserStorageProviderFactory implements UserStorageProviderFact
 
     private static Logger LOG = LoggerFactory.getLogger(RemoteUserStorageProviderFactory.class);
     public static final String PROVIDER_NAME = "jans-keycloak-storage-api";
-    // initialize config properties
-    //JansConfigSource jansConfigSource = new JansConfigSource();
 
     @Override
     public RemoteUserStorageProvider create(KeycloakSession session, ComponentModel model) {
@@ -33,6 +30,11 @@ public class RemoteUserStorageProviderFactory implements UserStorageProviderFact
         return id;
     }
 
+    @Override
+    public String getHelpText() {
+        return "Jans Remote User Provider";
+    }
+    
     @Override
     public void init(Config.Scope config) {
         LOG.info(
