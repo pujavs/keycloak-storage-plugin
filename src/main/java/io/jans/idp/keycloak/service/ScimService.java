@@ -21,6 +21,12 @@ public class ScimService {
     private static Logger LOG = LoggerFactory.getLogger(ScimService.class);
     private static JansUtil jansUtil = new JansUtil();
 
+    private String getScimUserEndpoint() {
+        String scimUserEndpoint = jansUtil.getScimUserEndpoint();
+        LOG.info("ScimService::getScimUserEndpoint() - scimUserEndpoint:{}", scimUserEndpoint);
+        return scimUserEndpoint;
+    }
+
     private String getScimUserSearchEndpoint() {
         String scimUserSearchEndpoint = jansUtil.getScimUserSearchEndpoint();
         LOG.info("ScimService::getScimUserSearchEndpoint() - scimUserSearchEndpoint:{}", scimUserSearchEndpoint);
@@ -33,7 +39,6 @@ public class ScimService {
 
         try {
             token = jansUtil.requestScimAccessToken();
-            // String token = Constants.AUTH_TOKEN;
             LOG.info("ScimService::requestAccessToken() -  token:{}", token);
         } catch (Exception ex) {
             LOG.error("ScimService::requestAccessToken() - Error while generating access token for SCIM endpoint is:{}",
@@ -48,9 +53,7 @@ public class ScimService {
     public UserResource getUserById(String inum) {
         LOG.info(" ScimService::getUserById() - inum:{}", inum);
         try {
-
-            String filter = "id eq \"" + inum + "\"";
-            return postData(getScimUserSearchEndpoint() + "/" + inum, this.requestAccessToken(), filter);
+            return getData(getScimUserEndpoint() + "/" + inum, this.requestAccessToken());
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error(
@@ -80,6 +83,7 @@ public class ScimService {
         try {
 
             String filter = "emails[value eq \"" + email + "\"]";
+            LOG.info(" ScimService::getUserByEmail() - filter:{}", filter);
             return postData(this.getScimUserSearchEndpoint(), this.requestAccessToken(), filter);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -105,12 +109,34 @@ public class ScimService {
 
             LOG.info("\n\n  ScimService::postData() - jsonNode:{}", jsonNode);
 
-            user = getUserResource(jsonNode);
+            user = getUserResourceFromList(jsonNode);
+
             LOG.info("ScimService::postData() - user:{}", user);
 
         } catch (Exception ex) {
             ex.printStackTrace();
             LOG.error("\n\n ScimService::postData() - Error while fetching data is ex:{}", ex);
+        }
+        return user;
+    }
+
+    public UserResource getData(String uri, String accessToken) {
+        UserResource user = null;
+        LOG.info("ScimService::getData() - uri:{}, accessToken:{}", uri, accessToken);
+        try {
+            HttpClient client = HttpClientBuilder.create().build();
+
+            JsonNode jsonNode = SimpleHttp.doGet(uri, client).auth(accessToken).asJson();
+
+            LOG.info("\n\n  ScimService::getData() - jsonNode:{}", jsonNode);
+
+            user = getUserResource(jsonNode);
+
+            LOG.info("ScimService::getData() - user:{}", user);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            LOG.error("\n\n ScimService::getData() - Error while fetching data is ex:{}", ex);
         }
         return user;
     }
@@ -125,19 +151,36 @@ public class ScimService {
         return searchRequest;
     }
 
-    private UserResource getUserResource(JsonNode jsonNode) {
-        LOG.info(" \n\n ScimService::getUserResource() - jsonNode:{}", jsonNode);
+    private UserResource getUserResourceFromList(JsonNode jsonNode) {
+        LOG.info(" \n\n ScimService::getUserResourceFromList() - jsonNode:{}", jsonNode);
 
         UserResource user = null;
         try {
             if (jsonNode != null) {
                 if (jsonNode.get("Resources") != null) {
                     JsonNode value = jsonNode.get("Resources").get(0);
-                    LOG.info("\n\n *** ScimService::getUserResource() - value:{}, value.getClass():{}", value,
+                    LOG.info("\n\n *** ScimService::getUserResourceFromList() - value:{}, value.getClass():{}", value,
                             value.getClass());
                     user = JsonSerialization.readValue(JsonSerialization.writeValueAsBytes(value), UserResource.class);
-                    LOG.info(" ScimService::getUserResource() - user:{}, user.getClass():{}", user, user.getClass());
+                    LOG.info(" ScimService::getUserResourceFromList() - user:{}, user.getClass():{}", user,
+                            user.getClass());
                 }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            LOG.error("\n\n ScimService::getUserResourceFromList() - Error while fetching data is ex:{}", ex);
+        }
+        return user;
+    }
+
+    private UserResource getUserResource(JsonNode jsonNode) {
+        LOG.info(" \n\n ScimService::getUserResource() - jsonNode:{}", jsonNode);
+
+        UserResource user = null;
+        try {
+            if (jsonNode != null) {
+                user = JsonSerialization.readValue(JsonSerialization.writeValueAsBytes(jsonNode), UserResource.class);
+                LOG.info(" ScimService::getUserResource() - user:{}, user.getClass():{}", user, user.getClass());
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -145,4 +188,5 @@ public class ScimService {
         }
         return user;
     }
+
 }

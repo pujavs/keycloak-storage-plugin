@@ -10,6 +10,7 @@ import org.keycloak.models.RealmModel;
 
 import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
+import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
 
 import org.keycloak.storage.user.UserLookupProvider;
@@ -66,11 +67,12 @@ public class RemoteUserStorageProvider implements CredentialInputValidator, User
      * Get user based on id
      */
     public UserModel getUserById(RealmModel paramRealmModel, String id) {
-        LOG.info("RemoteUserStorageProvider::getUserById() - paramRealmModel:{}, id:{}", paramRealmModel, id);
+        LOG.info("RemoteUserStorageProvider::getUserById() - paramRealmModel:{}, id:{}, StorageId.externalId(id):{}", paramRealmModel, id, StorageId.externalId(id));
 
         UserModel userModel = null;
         try {
-            UserResource user = usersService.getUserById(id);
+            //UserResource user = usersService.getUserById(id);
+            UserResource user = usersService.getUserById(StorageId.externalId(id));
             LOG.info("***** RemoteUserStorageProvider::getUserById() - user fetched based on  id:{} is user:{}", id,
                     user);
             if (user != null) {

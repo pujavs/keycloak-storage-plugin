@@ -171,8 +171,8 @@ public class JansUtil {
             final String scope, GrantType grantType, AuthenticationMethod authenticationMethod, String mediaType)
             throws IOException {
         LOG.info(
-                "JansUtil::requestUserToken() - Request for Access Token -  tokenUrl:{}, username:{}, password:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}",
-                tokenUrl, username, password, scope, grantType, authenticationMethod, mediaType);
+                "JansUtil::requestUserToken() - Request for Access Token -  tokenUrl:{}, username:{}, password:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}, grantType.getValue():{}, authenticationMethod.name():{}",
+                tokenUrl, username, password, scope, grantType, authenticationMethod, mediaType, grantType.getValue(), authenticationMethod.name());
         String token = null;
         try {
             String clientId = this.getClientId();
@@ -182,9 +182,9 @@ public class JansUtil {
             HttpClient client = HttpClientBuilder.create().build();
             JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
                     .header("Authorization", "Basic " + this.getEncodedCredentials(clientId, clientSecret))
-                    .header("Content-Type", mediaType).param("grant_type", "client_credentials")
+                    .header("Content-Type", mediaType).param("grant_type", grantType.getValue())
                     .param("username", username + ":" + password).param("scope", scope).param("client_id", clientId)
-                    .param("client_secret", clientSecret).param("authorization_method", "client_secret_basic").asJson();
+                    .param("client_secret", clientSecret).param("authorization_method", authenticationMethod.name()).asJson();
             LOG.info("\n\n ***** JansUtil::requestUserToken() - POST Request for User Token -  jsonNode:{} ", jsonNode);
 
             
