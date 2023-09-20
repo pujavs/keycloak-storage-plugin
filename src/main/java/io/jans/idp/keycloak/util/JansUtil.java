@@ -1,28 +1,18 @@
 package io.jans.idp.keycloak.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jackson.JacksonUtils;
 
-import io.jans.as.client.TokenClient;
-import io.jans.as.client.TokenRequest;
-import io.jans.as.client.TokenResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+
+
 import io.jans.as.model.common.AuthenticationMethod;
 import io.jans.as.model.common.GrantType;
 import io.jans.as.model.common.ScopeType;
-import io.jans.as.model.uma.wrapper.Token;
 import io.jans.as.model.util.Util;
 import io.jans.idp.keycloak.config.JansConfigSource;
-import io.jans.scim.model.scim2.user.UserResource;
-import io.jans.idp.keycloak.client.JansTokenClient;
-import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation.Builder;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedHashMap;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.WebApplicationException;
 
+
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -34,14 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.keycloak.broker.provider.util.SimpleHttp;
-import org.keycloak.util.JsonSerialization;
-import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
-import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient43Engine;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RegisterProvider(JansTokenClient.class)
 public class JansUtil {
     private static Logger LOG = LoggerFactory.getLogger(JansUtil.class);
     private JansConfigSource jansConfigSource = new JansConfigSource();
@@ -138,26 +124,19 @@ public class JansUtil {
         String token = null;
         try {
 
-            TokenRequest tokenRequest = new TokenRequest(grantType);
-            tokenRequest.setScope(scope);
-            tokenRequest.setAuthUsername(clientId);
-            tokenRequest.setAuthPassword(clientSecret);
-            tokenRequest.setGrantType(grantType);
-            tokenRequest.setAuthenticationMethod(authenticationMethod);
 
-            LOG.info(" JansUtil::requestAccessToken() - tokenRequest.getEncodedCredentials():{}, this.getEncodedCredentials():{}",
-                    tokenRequest.getEncodedCredentials(), this.getEncodedCredentials(clientId, clientSecret));
+            LOG.info(" JansUtil::requestAccessToken() - this.getEncodedCredentials():{}", this.getEncodedCredentials(clientId, clientSecret));
             HttpClient client = HttpClientBuilder.create().build();
             JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
-                    .header("Authorization", "Basic " + tokenRequest.getEncodedCredentials())
+                    .header("Authorization", "Basic " + this.getEncodedCredentials(clientId, clientSecret))
                     .header("Content-Type", mediaType).param("grant_type", "client_credentials")
                     .param("username", clientId + ":" + clientSecret).param("scope", scope).param("client_id", clientId)
                     .param("client_secret", clientSecret).param("authorization_method", "client_secret_basic").asJson();
             LOG.info("\n\n ***** JansUtil::requestAccessToken() - POST Request for Access Token -  jsonNode:{} ", jsonNode);
 
-            // if(validateTokenScope(jsonNode,scope)) {
+           
             token = this.getToken(jsonNode);
-            // }
+        
             LOG.info("\n\n ***** JansUtil::requestAccessToken() -POST Request for Access Token -  token:{} ", token);
 
         } catch (Exception ex) {
@@ -171,8 +150,8 @@ public class JansUtil {
             final String scope, GrantType grantType, AuthenticationMethod authenticationMethod, String mediaType)
             throws IOException {
         LOG.info(
-                "JansUtil::requestUserToken() - Request for Access Token -  tokenUrl:{}, username:{}, password:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}, grantType.getValue():{}, authenticationMethod.name():{}",
-                tokenUrl, username, password, scope, grantType, authenticationMethod, mediaType, grantType.getValue(), authenticationMethod.name());
+                "JansUtil::requestUserToken() - Request for Access Token -  tokenUrl:{}, username:{}, password:{}, scope:{}, grantType:{}, authenticationMethod:{}, mediaType:{}",
+                tokenUrl, username, password, scope, grantType, authenticationMethod, mediaType);
         String token = null;
         try {
             String clientId = this.getClientId();
@@ -183,8 +162,7 @@ public class JansUtil {
             JsonNode jsonNode = SimpleHttp.doPost(tokenUrl, client)
                     .header("Authorization", "Basic " + this.getEncodedCredentials(clientId, clientSecret))
                     .header("Content-Type", mediaType).param("grant_type", grantType.getValue())
-                    .param("username", username + ":" + password).param("scope", scope).param("client_id", clientId)
-                    .param("client_secret", clientSecret).param("authorization_method", authenticationMethod.name()).asJson();
+                    .param("username", username).param("password", password).asJson();
             LOG.info("\n\n ***** JansUtil::requestUserToken() - POST Request for User Token -  jsonNode:{} ", jsonNode);
 
             

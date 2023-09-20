@@ -12,7 +12,6 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageProvider;
-
 import org.keycloak.storage.user.UserLookupProvider;
 
 import org.slf4j.Logger;
@@ -53,25 +52,26 @@ public class RemoteUserStorageProvider implements CredentialInputValidator, User
         LOG.info(
                 "\n\n\n *@*@*@* RemoteUserStorageProvider::isValid() - realm:{}, user:{}, credentialInput:{}, user.getUsername():{}, ",
                 realm, user, credentialInput, user.getUsername(), credentialInput.getChallengeResponse());
-        boolean verifyPasswordResponse = credentialAuthenticatingService.authenticateUser(user.getUsername(),
+
+        boolean valid = credentialAuthenticatingService.authenticateUser(user.getUsername(),
                 credentialInput.getChallengeResponse());
 
-        /// if (verifyPasswordResponse == null)
-        // return verifyPasswordResponse;
-        return true;
+        LOG.info("\n\n\n *@*@*@* RemoteUserStorageProvider::isValid() - valid:{}", valid);
 
-        // return verifyPasswordResponse.getResult();
+        return valid;
+
     }
 
     /**
      * Get user based on id
      */
     public UserModel getUserById(RealmModel paramRealmModel, String id) {
-        LOG.info("RemoteUserStorageProvider::getUserById() - paramRealmModel:{}, id:{}, StorageId.externalId(id):{}", paramRealmModel, id, StorageId.externalId(id));
+        LOG.info("RemoteUserStorageProvider::getUserById() - paramRealmModel:{}, id:{}, StorageId.externalId(id):{}",
+                paramRealmModel, id, StorageId.externalId(id));
 
         UserModel userModel = null;
         try {
-            //UserResource user = usersService.getUserById(id);
+            // UserResource user = usersService.getUserById(id);
             UserResource user = usersService.getUserById(StorageId.externalId(id));
             LOG.info("***** RemoteUserStorageProvider::getUserById() - user fetched based on  id:{} is user:{}", id,
                     user);

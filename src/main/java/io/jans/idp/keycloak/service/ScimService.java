@@ -2,16 +2,15 @@ package io.jans.idp.keycloak.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import org.keycloak.broker.provider.util.SimpleHttp;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-
 import io.jans.idp.keycloak.util.JansUtil;
 import io.jans.scim.model.scim2.SearchRequest;
 import io.jans.scim.model.scim2.user.UserResource;
-
 import jakarta.ws.rs.WebApplicationException;
 
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.keycloak.broker.provider.util.SimpleHttp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.keycloak.util.JsonSerialization;

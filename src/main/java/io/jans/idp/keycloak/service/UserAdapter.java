@@ -1,5 +1,11 @@
 package io.jans.idp.keycloak.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
+import org.apache.commons.lang.StringUtils;
+
 import io.jans.scim.model.scim2.user.UserResource;
 import io.jans.scim.model.scim2.util.DateUtil;
 import org.keycloak.common.util.MultivaluedHashMap;
@@ -12,12 +18,6 @@ import org.keycloak.models.SubjectCredentialManager;
 import org.keycloak.models.UserModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.adapter.AbstractUserAdapter;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
-import org.apache.commons.lang.StringUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
