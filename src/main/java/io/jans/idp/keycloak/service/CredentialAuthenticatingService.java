@@ -1,6 +1,6 @@
 package io.jans.idp.keycloak.service;
 
-import io.jans.as.model.common.GrantType;
+import io.jans.idp.keycloak.util.Constants;
 import io.jans.idp.keycloak.util.JansUtil;
 import jakarta.ws.rs.core.MediaType;
 
@@ -21,7 +21,7 @@ public class CredentialAuthenticatingService {
         try {
 
             String token = jansUtil.requestUserToken(jansUtil.getTokenEndpoint(), username, password, null,
-                    GrantType.RESOURCE_OWNER_PASSWORD_CREDENTIALS, null, MediaType.APPLICATION_FORM_URLENCODED);
+                    Constants.RESOURCE_OWNER_PASSWORD_CREDENTIALS, null, MediaType.APPLICATION_FORM_URLENCODED);
 
             LOG.info("\n\n\n CredentialAuthenticatingService::authenticateUser() -  Final token token  - {}", token);
 

@@ -51,11 +51,11 @@
 			<artifactId>jans-auth-client</artifactId>
 			<version>${jans.version}</version>
 		</dependency>
-		<dependency>
+<!--		<dependency>
 			<groupId>io.jans</groupId>
 			<artifactId>jans-auth-model</artifactId>
 			<version>${jans.version}</version>
-		</dependency>
+		</dependency>-->
 		<dependency>
 			<groupId>io.jans</groupId>
 			<artifactId>jans-orm-core</artifactId>
