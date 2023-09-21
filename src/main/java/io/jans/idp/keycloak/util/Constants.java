@@ -6,7 +6,6 @@
 
 package io.jans.idp.keycloak.util;
 
-
 public class Constants {
 
     private Constants() {}

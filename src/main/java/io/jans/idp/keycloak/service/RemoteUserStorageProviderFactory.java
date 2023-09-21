@@ -13,19 +13,19 @@ import org.slf4j.LoggerFactory;
 
 public class RemoteUserStorageProviderFactory implements UserStorageProviderFactory<RemoteUserStorageProvider> {
 
-    private static Logger LOG = LoggerFactory.getLogger(RemoteUserStorageProviderFactory.class);
+    private static Logger logger = LoggerFactory.getLogger(RemoteUserStorageProviderFactory.class);
     public static final String PROVIDER_NAME = "jans-keycloak-storage-api";
 
     @Override
     public RemoteUserStorageProvider create(KeycloakSession session, ComponentModel model) {
-        LOG.info("\n\n\n RemoteUserStorageProviderFactory::create() - session:{}, model:{}", session, model);
+        logger.info("RemoteUserStorageProviderFactory::create() - session:{}, model:{}", session, model);
         return new RemoteUserStorageProvider(session, model);
     }
 
     @Override
     public String getId() {
         String id = PROVIDER_NAME;
-        LOG.info("id:{}", id);
+        logger.info("id:{}", id);
 
         return id;
     }
@@ -34,24 +34,22 @@ public class RemoteUserStorageProviderFactory implements UserStorageProviderFact
     public String getHelpText() {
         return "Jans Remote User Provider";
     }
-    
+
     @Override
     public void init(Config.Scope config) {
-        LOG.info(
-                "\n\n\n RemoteUserStorageProviderFactory::init() - config:{}, System.getProperty(Constants.JANS_CONFIG_PROP_PATH):{}",
+        logger.info(
+                "RemoteUserStorageProviderFactory::init() - config:{}, System.getProperty(Constants.JANS_CONFIG_PROP_PATH):{}",
                 config, System.getProperty(Constants.JANS_CONFIG_PROP_PATH));
     }
 
     @Override
     public void postInit(KeycloakSessionFactory factory) {
-        LOG.info("\n\n\n RemoteUserStorageProviderFactory::postInit() - config:{}", factory);
-
+        logger.info("RemoteUserStorageProviderFactory::postInit() - config:{}", factory);
     }
 
     @Override
     public void close() {
-        LOG.info("\n\n\n RemoteUserStorageProviderFactory::close() - Exit:{}");
-
+        logger.info("RemoteUserStorageProviderFactory::close() - Exit");
     }
 
 }

@@ -1,7 +1,8 @@
 package io.jans.idp.keycloak.config;
 
+import io.jans.idp.keycloak.util.Constants;
+
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,41 +16,41 @@ import org.keycloak.component.ComponentValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.jans.idp.keycloak.util.Constants;
-
 public class JansConfigSource implements ConfigSource {
 
-    private static Logger LOG = LoggerFactory.getLogger(JansConfigSource.class);
-    private String CONFIG_FILE_PATH = null;
+    private static Logger logger = LoggerFactory.getLogger(JansConfigSource.class);
     private static final String CONFIG_FILE_NAME = "jans-keycloak-storage-api.properties";
+    
+    private String configFilePath = null;
     private Properties properties = null;
-    Map<String, String> propertiesMap = new HashMap<>();
+    private Map<String, String> propertiesMap = new HashMap<>();
 
     public JansConfigSource() {
-        String configFilePath = System.getProperty(Constants.JANS_CONFIG_PROP_PATH);
-        LOG.info("\n\n this.configFilePath:{}", configFilePath);
+        this.configFilePath = System.getProperty(Constants.JANS_CONFIG_PROP_PATH);
+        logger.info("this.configFilePath:{}", configFilePath);
+       
         if (StringUtils.isBlank(configFilePath)) {
             throw new ComponentValidationException(
                     "Configuration property file path `System property` not set, please verify.");
         }
-        this.CONFIG_FILE_PATH = configFilePath;
+        
         this.loadProperties();
     }
 
     @Override
     public Map<String, String> getProperties() {
-        LOG.info("\n\n Getting properties \n\n");
+        logger.info("\n\n Getting properties \n\n");
         return propertiesMap;
     }
 
     @Override
     public Set<String> getPropertyNames() {
-        LOG.debug("\n\n Getting Property Names \n\n");
+        logger.debug("\n\n Getting Property Names \n\n");
         try {
             return properties.stringPropertyNames();
 
         } catch (Exception e) {
-            LOG.error("\n\n Unable to read properties from file: " + CONFIG_FILE_NAME, e);
+            logger.error("Unable to read properties from CONFIG_FILE_NAME:{} - error is :{}", CONFIG_FILE_NAME, e);
         }
         return Collections.emptySet();
     }
@@ -62,10 +63,10 @@ public class JansConfigSource implements ConfigSource {
     @Override
     public String getValue(String name) {
         try {
-            LOG.info("\n JansConfigSource()::getValue() - name:{} - :{}", name, properties.getProperty(name));
+            logger.trace("JansConfigSource()::getValue() - name:{} - :{}", name, properties.getProperty(name));
             return properties.getProperty(name);
         } catch (Exception e) {
-            LOG.error("\n\n Unable to read properties from file: " + CONFIG_FILE_NAME, e);
+            logger.error("Unable to read properties from file:{} - error is :{} ", CONFIG_FILE_NAME, e);
         }
 
         return null;
@@ -78,72 +79,54 @@ public class JansConfigSource implements ConfigSource {
 
     public String getQualifiedFileName() {
         String fileSeparator = FileSystems.getDefault().getSeparator();
-        LOG.info("\n\n JansConfigSource()::getQualifiedFileName() - fileSeparator:{}", fileSeparator);
-        return this.CONFIG_FILE_PATH + fileSeparator + CONFIG_FILE_NAME;
+        logger.info("\n\n JansConfigSource()::getQualifiedFileName() - fileSeparator:{}", fileSeparator);
+        return this.configFilePath + fileSeparator + CONFIG_FILE_NAME;
     }
 
     private Properties loadProperties() {
-        LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - Properties form Config.Scope ");
-        FileInputStream file = null;
-        try {
-            // Get file path
-            String filePath = getQualifiedFileName();
-            LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - properties:{}, filePath:{}", properties,
-                    filePath);
+        logger.info("\n\n\n ***** JansConfigSource::loadProperties() - Properties form Config.Scope ");
 
-            // Load properties only once
-            //if (properties == null && properties.isEmpty() && StringUtils.isNotBlank(filePath)) {
-            if (StringUtils.isNotBlank(filePath)) {
+        // Get file path
+        String filePath = getQualifiedFileName();
+        logger.info("\n\n\n ***** JansConfigSource::loadProperties() - properties:{}, filePath:{}", properties, filePath);
 
-                // load the file handle for main.properties
-                file = new FileInputStream(filePath);
-                LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - file =" + file + "\n\n");
-                if (file != null) {
-                    LOG.info("\n\n\n ***** JansConfigSource::loadProperties() - loading file \n\n");
-                    // load all the properties from this file
-                    properties = new Properties();
-                    properties.load(file);
-                    properties.stringPropertyNames().stream()
-                            .forEach(key -> propertiesMap.put(key, properties.getProperty(key)));
-                    LOG.debug("\n\n JansConfigSource()::loadProperties() - properties :{} {}", properties, "\n\n\n");
-                    if (properties != null) {
-                        printProperties(properties);
-                    }
-                    // we have loaded the properties, so close the file handle
+        if (StringUtils.isBlank(filePath)) {
+            logger.error("Property filePath is null!");
+            throw new ComponentValidationException("Config property filePath is null!!!");
+        }
 
-                } else {
-                    LOG.error("Config properties file is null!");
-                    throw new ComponentValidationException("CConfig properties file is null!!!");
-                }
+        // load the file handle for main.properties
+        try (FileInputStream file = new FileInputStream(filePath)) {
+            logger.info(" JansConfigSource::loadProperties() - file:{}", file);
 
-                if (properties != null) {
-                    printProperties(properties);
-                } else {
-                    LOG.error("Could not load config properties!");
-                    throw new ComponentValidationException("Could not load config properties!!!");
-                }
+            // load all the properties from this file
+            properties = new Properties();
+            properties.load(file);
+            properties.stringPropertyNames().stream()
+                    .forEach(key -> propertiesMap.put(key, properties.getProperty(key)));
 
-            } else {
-                LOG.error("Property file is null!");
-                throw new ComponentValidationException("Config property file is null!!!");
+            logger.debug("JansConfigSource()::loadProperties() - properties :{}", properties);
+
+            if (properties.isEmpty()) {
+                logger.error("Could not load config properties!");
+                throw new ComponentValidationException("Could not load config properties!!!");
             }
+
+            printProperties(properties);
 
         } catch (Exception ex) {
-            LOG.error("Failed to load property file", ex);
+            logger.error("Failed to load property file", ex);
             throw new ComponentValidationException("Failed to load property file!!!");
-        } finally {
-            try {
-                if (file != null) {
-                    file.close();
-                }
-            } catch (IOException ex) {
-            }
         }
+
         return properties;
     }
 
     private static void printProperties(Properties prop) {
-        prop.keySet().stream().map(key -> key + ": " + prop.getProperty(key.toString())).forEach(System.out::println);
+        if (prop == null || prop.isEmpty()) {
+            return;
+        }
+        prop.keySet().stream().map(key -> key + ": " + prop.getProperty(key.toString())).forEach(logger::debug);
     }
 
 }

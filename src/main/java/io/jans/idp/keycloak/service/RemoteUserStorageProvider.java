@@ -7,7 +7,6 @@ import org.keycloak.credential.CredentialInput;
 import org.keycloak.credential.CredentialInputValidator;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
-
 import org.keycloak.models.UserModel;
 import org.keycloak.models.credential.PasswordCredentialModel;
 import org.keycloak.storage.StorageId;
@@ -19,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 public class RemoteUserStorageProvider implements CredentialInputValidator, UserLookupProvider, UserStorageProvider {
 
-    private static Logger LOG = LoggerFactory.getLogger(RemoteUserStorageProvider.class);
+    private static Logger logger = LoggerFactory.getLogger(RemoteUserStorageProvider.class);
 
     private KeycloakSession session;
     private ComponentModel model;
@@ -27,7 +26,7 @@ public class RemoteUserStorageProvider implements CredentialInputValidator, User
     private CredentialAuthenticatingService credentialAuthenticatingService = new CredentialAuthenticatingService();
 
     public RemoteUserStorageProvider(KeycloakSession session, ComponentModel model) {
-        LOG.info("RemoteUserStorageProvider() -  session:{}, model:{}", session, model);
+        logger.info("RemoteUserStorageProvider() -  session:{}, model:{}", session, model);
 
         this.session = session;
         this.model = model;
@@ -36,27 +35,27 @@ public class RemoteUserStorageProvider implements CredentialInputValidator, User
 
     @Override
     public boolean supportsCredentialType(String credentialType) {
-        LOG.info("RemoteUserStorageProvider::supportsCredentialType() - credentialType:{}", credentialType);
+        logger.info("RemoteUserStorageProvider::supportsCredentialType() - credentialType:{}", credentialType);
         return PasswordCredentialModel.TYPE.equals(credentialType);
     }
 
     @Override
     public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
-        LOG.info("RemoteUserStorageProvider::isConfiguredFor() - realm:{}, user:{}, credentialType:{} ", realm, user,
+        logger.info("RemoteUserStorageProvider::isConfiguredFor() - realm:{}, user:{}, credentialType:{} ", realm, user,
                 credentialType);
         return user.credentialManager().isConfiguredFor(credentialType);
     }
 
     @Override
     public boolean isValid(RealmModel realm, UserModel user, CredentialInput credentialInput) {
-        LOG.info(
-                "\n\n\n *@*@*@* RemoteUserStorageProvider::isValid() - realm:{}, user:{}, credentialInput:{}, user.getUsername():{}, ",
+        logger.info(
+                "RemoteUserStorageProvider::isValid() - realm:{}, user:{}, credentialInput:{}, user.getUsername():{}, credentialInput.getChallengeResponse():{}",
                 realm, user, credentialInput, user.getUsername(), credentialInput.getChallengeResponse());
 
         boolean valid = credentialAuthenticatingService.authenticateUser(user.getUsername(),
                 credentialInput.getChallengeResponse());
 
-        LOG.info("\n\n\n *@*@*@* RemoteUserStorageProvider::isValid() - valid:{}", valid);
+        logger.info("RemoteUserStorageProvider::isValid() - valid:{}", valid);
 
         return valid;
 
@@ -66,36 +65,34 @@ public class RemoteUserStorageProvider implements CredentialInputValidator, User
      * Get user based on id
      */
     public UserModel getUserById(RealmModel paramRealmModel, String id) {
-        LOG.info("RemoteUserStorageProvider::getUserById() - paramRealmModel:{}, id:{}, StorageId.externalId(id):{}",
-                paramRealmModel, id, StorageId.externalId(id));
+        logger.info("RemoteUserStorageProvider::getUserById() - paramRealmModel:{}, id:{}", paramRealmModel, id);
 
         UserModel userModel = null;
         try {
-            // UserResource user = usersService.getUserById(id);
             UserResource user = usersService.getUserById(StorageId.externalId(id));
-            LOG.info("***** RemoteUserStorageProvider::getUserById() - user fetched based on  id:{} is user:{}", id,
-                    user);
+            logger.info("RemoteUserStorageProvider::getUserById() - user fetched based on  id:{} is user:{}", id, user);
             if (user != null) {
                 userModel = createUserModel(paramRealmModel, user);
-                LOG.info("\n\n\n\n ***************** RemoteUserStorageProvider::getUserById() - New userModel ="
-                        + userModel + "\n\n");
+                logger.info(" RemoteUserStorageProvider::getUserById() - userModel:{}", userModel);
 
-                LOG.info("RemoteUserStorageProvider::getUserById() - userModel:{}", userModel);
+                if (userModel != null) {
+                    logger.info(
+                            "RemoteUserStorageProvider::getUserById() - Final userModel fetched with id:{},  userModel:{}, userModel.getAttributes(:{})",
+                            id, userModel, userModel.getAttributes());
+                }
             }
 
-            LOG.info("RemoteUserStorageProvider::getUserById() - User fetched with id:{} from external service is:{}",
+            logger.info(
+                    "RemoteUserStorageProvider::getUserById() - User fetched with id:{} from external service is:{}",
                     id, user);
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            LOG.error(
+            logger.error(
                     "RemoteUserStorageProvider::getUserById() - Error fetching user id:{} from external service is:{} - {} ",
                     id, ex.getMessage(), ex);
 
         }
-        LOG.info(
-                "RemoteUserStorageProvider::getUserById() - Final User fetched with id:{},  userModel:{}, userModel.getAttributes(:{})",
-                id, userModel, userModel.getAttributes());
 
         return userModel;
     }
@@ -104,30 +101,29 @@ public class RemoteUserStorageProvider implements CredentialInputValidator, User
      * Get user based on name
      */
     public UserModel getUserByUsername(RealmModel paramRealmModel, String name) {
-        LOG.info("RemoteUserStorageProvider::getUserByUsername() - paramRealmModel:{}, name:{}", paramRealmModel, name);
+        logger.info("RemoteUserStorageProvider::getUserByUsername() - paramRealmModel:{}, name:{}", paramRealmModel,
+                name);
 
         UserModel userModel = null;
         try {
             UserResource user = usersService.getUserByName(name);
-            LOG.info(
+            logger.info(
                     "RemoteUserStorageProvider::getUserByUsername() - User fetched with name:{} from external service is:{}",
                     name, user);
 
             if (user != null) {
                 userModel = createUserModel(paramRealmModel, user);
-                LOG.info("\n\n\n\n ***************** RemoteUserStorageProvider::getUserByUsername() - New userModel ="
-                        + userModel + "\n\n");
-
-                LOG.info("RemoteUserStorageProvider::getUserByUsername() - userModel:{}", userModel);
+                logger.info("RemoteUserStorageProvider::getUserByUsername() - userModel:{}", userModel);
             }
-
-            LOG.info(
-                    "RemoteUserStorageProvider::getUserByUsername() - Final User fetched with name:{},  userModel:{}, userModel.getAttributes(:{})",
-                    name, userModel, userModel.getAttributes());
+            if (userModel != null) {
+                logger.info(
+                        "RemoteUserStorageProvider::getUserByUsername() - Final User fetched with name:{},  userModel:{}, userModel.getAttributes():{}",
+                        name, userModel, userModel.getAttributes());
+            }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            LOG.error(
+            logger.error(
                     "\n RemoteUserStorageProvider::getUserByUsername() -  Error fetching user name:{}, from external service is:{} - {} ",
                     name, ex.getMessage(), ex);
 
@@ -136,30 +132,30 @@ public class RemoteUserStorageProvider implements CredentialInputValidator, User
     }
 
     public UserModel getUserByEmail(RealmModel paramRealmModel, String email) {
-        LOG.info("RemoteUserStorageProvider::getUserByEmail() - paramRealmModel:{}, email:{}", paramRealmModel, email);
+        logger.info("RemoteUserStorageProvider::getUserByEmail() - paramRealmModel:{}, email:{}", paramRealmModel,
+                email);
 
         UserModel userModel = null;
         try {
             UserResource user = usersService.getUserByEmail(email);
-            LOG.info(
+            logger.info(
                     "RemoteUserStorageProvider::getUserByEmail() - User fetched with email:{} from external service is:{}",
                     email, user);
 
             if (user != null) {
                 userModel = createUserModel(paramRealmModel, user);
-                LOG.info("\n\n\n\n ***************** RemoteUserStorageProvider::getUserByEmail() - New userModel ="
-                        + userModel + "\n\n");
-
-                LOG.info("RemoteUserStorageProvider::getUserByEmail() - userModel:{}", userModel);
+                logger.info("RemoteUserStorageProvider::getUserByEmail() - userModel:{}", userModel);
             }
 
-            LOG.info(
-                    "RemoteUserStorageProvider::getUserByEmail() - Final User fetched with email:{},  userModel:{}, userModel.getAttributes(:{})",
-                    email, userModel, userModel.getAttributes());
+            if (userModel != null) {
+                logger.info(
+                        "RemoteUserStorageProvider::getUserByEmail() - Final User fetched with email:{},  userModel:{}, userModel.getAttributes(:{})",
+                        email, userModel, userModel.getAttributes());
+            }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            LOG.error(
+            logger.error(
                     "\n RemoteUserStorageProvider::getUserByEmail() -  Error fetching user email:{}, from external service is:{} - {} ",
                     email, ex.getMessage(), ex);
 
@@ -168,15 +164,15 @@ public class RemoteUserStorageProvider implements CredentialInputValidator, User
     }
 
     public void close() {
-        LOG.info("RemoteUserStorageProvider::close()");
+        logger.info("RemoteUserStorageProvider::close()");
 
     }
 
     private UserModel createUserModel(RealmModel realm, UserResource user) {
-        LOG.info("\n\n\n RemoteUserStorageProvider::createUserModel() - realm:{} , user:{}", realm, user + "\n\n\n");
+        logger.info("RemoteUserStorageProvider::createUserModel() - realm:{} , user:{}", realm, user);
 
         UserModel userModel = new UserAdapter(session, realm, model, user);
-        LOG.info("\n\n\n Final RemoteUserStorageProvider::createUserModel() - userModel:{}", userModel);
+        logger.info("Final RemoteUserStorageProvider::createUserModel() - userModel:{}", userModel);
 
         return userModel;
     }
